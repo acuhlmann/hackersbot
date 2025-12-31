@@ -1,8 +1,11 @@
 """Summarizer agent for generating article and comment summaries"""
 
 import json
+import logging
 from typing import List, Dict, Optional
 from src.models.ollama_client import OllamaClient
+
+logger = logging.getLogger(__name__)
 
 
 class SummarizerAgent:
@@ -40,7 +43,7 @@ class SummarizerAgent:
         # Summarize comments if requested
         if include_comments and comments:
             try:
-                print(f"  Processing {len(comments)} comments...")
+                logger.info("  Processing %d comments...", len(comments))
                 # Skip individual summaries - focus on overall topic discussion
                 # Just store comments as-is
                 article["comments"] = comments
@@ -54,7 +57,7 @@ class SummarizerAgent:
                 article["comment_topics"] = comment_analysis.get("topics", [])
                 article["comment_agreement"] = comment_analysis.get("agreement", {})
             except Exception as e:
-                print(f"  ⚠️  Error summarizing comments: {e}")
+                logger.warning("  ⚠️  Error summarizing comments: %s", e)
                 article["comment_summary"] = f"Error summarizing comments: {str(e)}"
                 article["comment_sentiment"] = "unknown"
                 article["comment_sentiment_score"] = 0.5
@@ -62,9 +65,9 @@ class SummarizerAgent:
                 article["comment_topics"] = []
         else:
             if not include_comments:
-                print(f"  Skipping comments (include_comments=False)")
+                logger.debug("  Skipping comments (include_comments=False)")
             elif not comments:
-                print(f"  No comments found for this article")
+                logger.debug("  No comments found for this article")
             article["comment_summary"] = None
             article["comment_sentiment"] = None
             article["comment_sentiment_score"] = None
@@ -128,7 +131,7 @@ Summary:"""
                 comment["summary"] = individual_summary
                 
                 if idx % 5 == 0:
-                    print(f"    Summarized {idx}/{len(top_comments)} comments...")
+                    logger.info("    Summarized %d/%d comments...", idx, len(top_comments))
                     
             except Exception as e:
                 # If summarization fails, use a truncated version
@@ -172,7 +175,7 @@ Summary:"""
         ]
         
         if not valid_comments:
-            print(f"  ⚠️  No valid comments found (all too short or empty)")
+            logger.warning("  ⚠️  No valid comments found (all too short or empty)")
             return {
                 "summary": "No substantial comments found to summarize.",
                 "sentiment": "neutral",
@@ -181,7 +184,7 @@ Summary:"""
                 "topics": []
             }
         
-        print(f"  Using {len(valid_comments)} valid comments for summary")
+        logger.info("  Using %d valid comments for summary", len(valid_comments))
         
         comments_text = "\n\n---\n\n".join([
             f"Comment by {c.get('author', 'unknown')}:\n{c.get('text', '')}"
@@ -192,7 +195,7 @@ Summary:"""
         max_chars = 10000
         if len(comments_text) > max_chars:
             comments_text = comments_text[:max_chars] + "..."
-            print(f"  ⚠️  Comment text truncated to {max_chars} chars")
+            logger.debug("  ⚠️  Comment text truncated to %d chars", max_chars)
         
         # Get concise summary of what topics people are discussing (similar length to article summary)
         summary_prompt = f"""Summarize the main discussion topics from these Hacker News comments in a concise paragraph (around 100-150 words). 
@@ -392,7 +395,7 @@ JSON:"""
         summarized = []
         
         for idx, article in enumerate(articles, 1):
-            print(f"Summarizing article {idx}/{len(articles)}: {article.get('title', 'Unknown')[:50]}...")
+            logger.info("Summarizing article %d/%d: %s...", idx, len(articles), article.get('title', 'Unknown')[:50])
             summarized_article = self.summarize_article(article, include_comments=include_comments)
             summarized.append(summarized_article)
         

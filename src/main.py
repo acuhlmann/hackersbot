@@ -1,8 +1,14 @@
 """Main CLI interface for HackerNews AI Summarizer"""
 
+import logging
 import click
-import json
 from typing import List, Dict
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 from src.agents.scraper_agent import ScraperAgent
 from src.agents.filter_agent import FilterAgent
 from src.agents.summarizer_agent import SummarizerAgent

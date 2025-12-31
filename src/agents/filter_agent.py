@@ -1,7 +1,11 @@
 """Filter agent for identifying AI-related topics"""
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from src.models.ollama_client import OllamaClient
+
+# Type alias for article dictionaries
+Article = Dict[str, Any]
+Classification = Dict[str, Any]
 
 
 class FilterAgent:
