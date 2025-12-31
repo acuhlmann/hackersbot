@@ -1,29 +1,37 @@
 """Hacker News scraper agent"""
 
+import logging
 import re
 import time
 import requests
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
+
+logger = logging.getLogger(__name__)
 
 
 class ScraperAgent:
     """Scrapes Hacker News articles and comments"""
     
     BASE_URL = "https://news.ycombinator.com"
+    DEFAULT_TIMEOUT = 10  # seconds
+    DEFAULT_DELAY = 1.0  # seconds between requests
+    MAX_CONTENT_LENGTH = 5000  # characters
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
     
-    def __init__(self, delay: float = 1.0):
+    def __init__(self, delay: float = None, timeout: int = None):
         """
         Initialize scraper agent.
         
         Args:
             delay: Delay between requests in seconds (to be respectful)
+            timeout: Request timeout in seconds
         """
-        self.delay = delay
+        self.delay = delay if delay is not None else self.DEFAULT_DELAY
+        self.timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
         self.session = requests.Session()
         self.session.headers.update(self.HEADERS)
     
@@ -38,7 +46,7 @@ class ScraperAgent:
             List of article dictionaries with title, url, points, author, time, comment_count
         """
         try:
-            response = self.session.get(self.BASE_URL, timeout=10)
+            response = self.session.get(self.BASE_URL, timeout=self.timeout)
             response.raise_for_status()
             soup = BeautifulSoup(response.content, "html.parser")
             
@@ -51,7 +59,7 @@ class ScraperAgent:
                     if article:
                         articles.append(article)
                 except Exception as e:
-                    print(f"Error parsing article {idx + 1}: {e}")
+                    logger.warning("Error parsing article %d: %s", idx + 1, e)
                     continue
                 
                 time.sleep(self.delay)
@@ -59,7 +67,7 @@ class ScraperAgent:
             return articles
             
         except requests.RequestException as e:
-            print(f"Error fetching Hacker News: {e}")
+            logger.error("Error fetching Hacker News: %s", e)
             return []
     
     def _parse_article_row(self, row: BeautifulSoup, soup: BeautifulSoup, idx: int) -> Optional[Dict]:
@@ -160,7 +168,7 @@ class ScraperAgent:
         
         try:
             time.sleep(self.delay)
-            response = self.session.get(comment_url, timeout=10)
+            response = self.session.get(comment_url, timeout=self.timeout)
             response.raise_for_status()
             soup = BeautifulSoup(response.content, "html.parser")
             
@@ -185,17 +193,17 @@ class ScraperAgent:
                     continue
             
             if len(comments) > 0:
-                print(f"  ✓ Parsed {len(comments)} comments")
+                logger.info("  ✓ Parsed %d comments", len(comments))
             else:
-                print(f"  ⚠️  No comments found")
+                logger.warning("  ⚠️  No comments found")
             
             return comments
             
         except requests.RequestException as e:
-            print(f"  ⚠️  Error fetching comments from {comment_url}: {e}")
+            logger.warning("  ⚠️  Error fetching comments from %s: %s", comment_url, e)
             return []
         except Exception as e:
-            print(f"  ⚠️  Unexpected error parsing comments: {e}")
+            logger.warning("  ⚠️  Unexpected error parsing comments: %s", e)
             return []
     
     def _parse_comment_row(self, row: BeautifulSoup, soup: BeautifulSoup) -> Optional[Dict]:
@@ -265,7 +273,7 @@ class ScraperAgent:
                     commtext_divs = row.select("div[class*='commtext']")
                     if commtext_divs:
                         comment_elem = commtext_divs[0]
-                except:
+                except Exception:
                     pass
             
             # Method 3: Search all divs in current row
@@ -373,7 +381,7 @@ class ScraperAgent:
         
         try:
             time.sleep(self.delay)
-            response = self.session.get(url, timeout=10)
+            response = self.session.get(url, timeout=self.timeout)
             response.raise_for_status()
             soup = BeautifulSoup(response.content, "html.parser")
             
@@ -393,14 +401,14 @@ class ScraperAgent:
                 text = main_content.get_text(separator="\n", strip=True)
                 # Clean up excessive whitespace
                 text = re.sub(r"\n\s*\n\s*\n", "\n\n", text)
-                return text[:5000]  # Limit to 5000 chars
+                return text[:self.MAX_CONTENT_LENGTH]
             
             return None
             
         except requests.RequestException:
             return None
         except Exception as e:
-            print(f"Error fetching article content from {url}: {e}")
+            logger.warning("Error fetching article content from %s: %s", url, e)
             return None
     
     def scrape_articles_with_comments(self, top_n: int = 3) -> List[Dict]:
@@ -416,14 +424,14 @@ class ScraperAgent:
         articles = self.fetch_top_articles(top_n)
         
         for article in articles:
-            print(f"Fetching comments for: {article['title'][:50]}...")
+            logger.info("Fetching comments for: %s...", article['title'][:50])
             comment_url = article.get("comment_url", "")
             if comment_url:
                 comments = self.fetch_comments(comment_url)
-                print(f"  Found {len(comments)} comments")
+                logger.info("  Found %d comments", len(comments))
                 article["comments"] = comments
             else:
-                print(f"  No comment URL found")
+                logger.debug("  No comment URL found")
                 article["comments"] = []
             
             # Optionally fetch article content

@@ -3,7 +3,7 @@
 import os
 import json
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from pathlib import Path
 
 
@@ -68,7 +68,7 @@ class Storage:
         self,
         articles: List[Dict],
         metadata: Optional[Dict] = None,
-        formats: List[str] = ["json", "markdown"]
+        formats: Optional[List[str]] = None
     ) -> Dict[str, str]:
         """
         Save article summaries in specified formats.
@@ -81,6 +81,8 @@ class Storage:
         Returns:
             Dictionary mapping format to filepath
         """
+        if formats is None:
+            formats = ["json", "markdown"]
         saved_files = {}
         
         # Prepare data structure

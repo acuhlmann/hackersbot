@@ -64,55 +64,31 @@ class OllamaClient:
     def get_summarizer_llm(self) -> Ollama:
         """Get LLM instance for summarization tasks"""
         if self._summarizer_llm is None:
-            # Try new API first, fallback to old
-            try:
-                # New langchain-ollama API
-                self._summarizer_llm = Ollama(
-                    base_url=self.base_url,
-                    model=self.summarizer_model,
-                    temperature=0.3,
-                )
-            except TypeError:
-                # Old langchain-community API
-                self._summarizer_llm = Ollama(
-                    base_url=self.base_url,
-                    model=self.summarizer_model,
-                    temperature=0.3,
-                )
+            self._summarizer_llm = Ollama(
+                base_url=self.base_url,
+                model=self.summarizer_model,
+                temperature=0.3,
+            )
         return self._summarizer_llm
     
     def get_filter_llm(self) -> Ollama:
         """Get LLM instance for filtering tasks"""
         if self._filter_llm is None:
-            try:
-                self._filter_llm = Ollama(
-                    base_url=self.base_url,
-                    model=self.filter_model,
-                    temperature=0.1,
-                )
-            except TypeError:
-                self._filter_llm = Ollama(
-                    base_url=self.base_url,
-                    model=self.filter_model,
-                    temperature=0.1,
-                )
+            self._filter_llm = Ollama(
+                base_url=self.base_url,
+                model=self.filter_model,
+                temperature=0.1,
+            )
         return self._filter_llm
     
     def get_general_llm(self) -> Ollama:
         """Get LLM instance for general tasks"""
         if self._general_llm is None:
-            try:
-                self._general_llm = Ollama(
-                    base_url=self.base_url,
-                    model=self.general_model,
-                    temperature=0.7,
-                )
-            except TypeError:
-                self._general_llm = Ollama(
-                    base_url=self.base_url,
-                    model=self.general_model,
-                    temperature=0.7,
-                )
+            self._general_llm = Ollama(
+                base_url=self.base_url,
+                model=self.general_model,
+                temperature=0.7,
+            )
         return self._general_llm
     
     def summarize(self, text: str, max_length: Optional[int] = None) -> str:
