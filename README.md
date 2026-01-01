@@ -189,6 +189,42 @@ python -m src.telegram_bot --provider ollama
 | `/ai 20` | Scan top 20 for AI articles |
 | `/help` | Show help message |
 
+## 🔄 GitHub Actions (No Server Needed!)
+
+You can run the summarizer directly from GitHub without any server!
+
+### Manual Run (Ad-hoc)
+
+1. Go to your repo → **Actions** tab
+2. Select **"HackerNews Summary"** workflow
+3. Click **"Run workflow"**
+4. Choose options:
+   - Number of articles (3, 5, or 10)
+   - Filter AI-only articles
+   - Save to repo
+5. Click **"Run workflow"**
+
+After it completes, click on the run to see the summary in the **Job Summary** section!
+
+### Automatic Triggers
+
+| Trigger | When | Default Behavior |
+|---------|------|------------------|
+| **Scheduled** | Daily at 8 AM UTC | Summarizes top 5, saves to `outputs/` |
+| **PR Merge** | After merging to main | Summarizes top 5, saves to `outputs/` |
+| **Manual** | On-demand | Your choice of options |
+
+### Where to Find Results
+
+1. **Job Summary** - Click on any workflow run to see the formatted summary
+2. **Artifacts** - Download MD/JSON files from the workflow run
+3. **Repository** - If "save to repo" is enabled, files are in `summaries/` folder
+
+### Required Secrets
+
+Make sure you've added `DEEPSEEK_API_KEY` in:
+**Settings → Secrets and variables → Actions → New repository secret**
+
 ## Output
 
 Summaries are saved in the `outputs/` directory with timestamps:
