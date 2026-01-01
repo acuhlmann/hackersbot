@@ -10,20 +10,20 @@ class TestSummarizerAgent:
     """Tests for SummarizerAgent class"""
     
     @pytest.fixture
-    def summarizer_agent(self, mock_ollama_client):
-        """Create SummarizerAgent with mocked OllamaClient"""
-        return SummarizerAgent(ollama_client=mock_ollama_client)
+    def summarizer_agent(self, mock_llm_client):
+        """Create SummarizerAgent with mocked LLMClient"""
+        return SummarizerAgent(llm_client=mock_llm_client)
     
     def test_summarizer_initialization_default(self):
-        """Test SummarizerAgent creates OllamaClient if not provided"""
-        with patch('src.agents.summarizer_agent.OllamaClient') as mock_client_class:
+        """Test SummarizerAgent creates LLMClient if not provided"""
+        with patch('src.agents.summarizer_agent.get_llm_client') as mock_get_client:
             agent = SummarizerAgent()
-            mock_client_class.assert_called_once()
+            mock_get_client.assert_called_once_with(provider=None)
     
-    def test_summarizer_initialization_custom_client(self, mock_ollama_client):
-        """Test SummarizerAgent uses provided OllamaClient"""
-        agent = SummarizerAgent(ollama_client=mock_ollama_client)
-        assert agent.ollama_client is mock_ollama_client
+    def test_summarizer_initialization_custom_client(self, mock_llm_client):
+        """Test SummarizerAgent uses provided LLMClient"""
+        agent = SummarizerAgent(llm_client=mock_llm_client)
+        assert agent.llm_client is mock_llm_client
     
     def test_summarize_article_basic(self, summarizer_agent, sample_article_with_content):
         """Test basic article summarization"""
@@ -33,7 +33,7 @@ class TestSummarizerAgent:
         )
         
         assert "article_summary" in result
-        summarizer_agent.ollama_client.summarize.assert_called_once()
+        summarizer_agent.llm_client.summarize.assert_called_once()
     
     def test_summarize_article_without_content(self, summarizer_agent, sample_article):
         """Test summarizing article without content"""
@@ -41,12 +41,12 @@ class TestSummarizerAgent:
         
         assert "article_summary" in result
         # Should still call summarize even without content
-        summarizer_agent.ollama_client.summarize.assert_called_once()
+        summarizer_agent.llm_client.summarize.assert_called_once()
     
     def test_summarize_article_with_comments(self, summarizer_agent, sample_article_with_comments):
         """Test summarizing article with comments"""
         # Set up mock for sentiment analysis
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
             "sentiment": "positive",
             "score": 0.8,
             "details": "Test details",
@@ -100,8 +100,8 @@ class TestSummarizerAgent:
         summarizer_agent.summarize_article(article, include_comments=False)
         
         # Verify summarize was called (content should be truncated internally)
-        summarizer_agent.ollama_client.summarize.assert_called_once()
-        call_args = summarizer_agent.ollama_client.summarize.call_args
+        summarizer_agent.llm_client.summarize.assert_called_once()
+        call_args = summarizer_agent.llm_client.summarize.call_args
         # The summary text should include truncated content
         assert len(call_args[0][0]) <= 3100  # 3000 chars + title + url
 
@@ -110,13 +110,13 @@ class TestSummarizerAgentCommentAnalysis:
     """Tests for comment analysis functionality"""
     
     @pytest.fixture
-    def summarizer_agent(self, mock_ollama_client):
-        """Create SummarizerAgent with mocked OllamaClient"""
-        return SummarizerAgent(ollama_client=mock_ollama_client)
+    def summarizer_agent(self, mock_llm_client):
+        """Create SummarizerAgent with mocked LLMClient"""
+        return SummarizerAgent(llm_client=mock_llm_client)
     
     def test_analyze_comment_sentiment_positive(self, summarizer_agent):
         """Test sentiment analysis returns positive"""
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
             "sentiment": "positive",
             "score": 0.85,
             "details": "Comments are enthusiastic",
@@ -130,7 +130,7 @@ class TestSummarizerAgentCommentAnalysis:
     
     def test_analyze_comment_sentiment_negative(self, summarizer_agent):
         """Test sentiment analysis returns negative"""
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
             "sentiment": "negative",
             "score": 0.2,
             "details": "Comments are critical",
@@ -144,7 +144,7 @@ class TestSummarizerAgentCommentAnalysis:
     
     def test_analyze_comment_sentiment_fallback(self, summarizer_agent):
         """Test sentiment analysis fallback on JSON parse error"""
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = "invalid json"
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = "invalid json"
         
         result = summarizer_agent._analyze_comment_sentiment("good great helpful")
         
@@ -154,7 +154,7 @@ class TestSummarizerAgentCommentAnalysis:
     
     def test_analyze_agreement_with_article(self, summarizer_agent):
         """Test agreement analysis with article"""
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
             "consensus": "agree",
             "agreement_score": 0.75,
             "details": "Most commenters support the article",
@@ -182,7 +182,7 @@ class TestSummarizerAgentCommentAnalysis:
     
     def test_analyze_agreement_fallback(self, summarizer_agent):
         """Test agreement analysis fallback on JSON parse error"""
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = "invalid"
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = "invalid"
         
         result = summarizer_agent._analyze_agreement_with_article(
             "I agree exactly correct",
@@ -209,7 +209,7 @@ class TestSummarizerAgentCommentAnalysis:
         ]
         
         # Set up mocks
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
             "sentiment": "neutral",
             "score": 0.5,
             "details": "Test",
@@ -226,9 +226,9 @@ class TestSummarizerAgentEdgeCases:
     """Edge case tests for SummarizerAgent"""
     
     @pytest.fixture
-    def summarizer_agent(self, mock_ollama_client):
-        """Create SummarizerAgent with mocked OllamaClient"""
-        return SummarizerAgent(ollama_client=mock_ollama_client)
+    def summarizer_agent(self, mock_llm_client):
+        """Create SummarizerAgent with mocked LLMClient"""
+        return SummarizerAgent(llm_client=mock_llm_client)
     
     def test_summarize_empty_articles_list(self, summarizer_agent):
         """Test summarizing empty articles list"""
@@ -238,7 +238,7 @@ class TestSummarizerAgentEdgeCases:
     def test_summarize_article_exception_handling(self, summarizer_agent, sample_article_with_comments):
         """Test that exceptions in comment summarization are handled"""
         # Make the filter LLM raise an exception
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.side_effect = Exception("LLM Error")
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.side_effect = Exception("LLM Error")
         
         result = summarizer_agent.summarize_article(
             sample_article_with_comments,
@@ -282,7 +282,7 @@ class TestSummarizerAgentEdgeCases:
         ]
         
         # Set up mocks
-        summarizer_agent.ollama_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+        summarizer_agent.llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
             "sentiment": "neutral",
             "score": 0.5,
             "details": "Test",

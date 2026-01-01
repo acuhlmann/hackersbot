@@ -3,7 +3,7 @@
 import json
 import logging
 from typing import List, Dict, Optional
-from src.models.ollama_client import OllamaClient
+from src.models.llm_client import LLMClient, get_llm_client
 
 logger = logging.getLogger(__name__)
 
@@ -11,14 +11,15 @@ logger = logging.getLogger(__name__)
 class SummarizerAgent:
     """Generates summaries of articles and comments using LLM"""
     
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None, provider: Optional[str] = None):
         """
         Initialize summarizer agent.
         
         Args:
-            ollama_client: Optional OllamaClient instance (creates new one if not provided)
+            llm_client: Optional LLMClient instance (creates new one if not provided)
+            provider: LLM provider ('ollama' or 'deepseek') if creating new client
         """
-        self.ollama_client = ollama_client or OllamaClient()
+        self.llm_client = llm_client or get_llm_client(provider=provider)
     
     def summarize_article(self, article: Dict, include_comments: bool = True) -> Dict:
         """
@@ -89,7 +90,7 @@ class SummarizerAgent:
         if len(summary_text) > max_chars:
             summary_text = summary_text[:max_chars] + "..."
         
-        return self.ollama_client.summarize(summary_text, max_length=150)
+        return self.llm_client.summarize(summary_text, max_length=150)
     
     def _summarize_individual_comments(self, comments: List[Dict]) -> List[Dict]:
         """
@@ -127,7 +128,7 @@ Comment:
 
 Summary:"""
                 
-                individual_summary = self.ollama_client.get_summarizer_llm().invoke(summary_prompt).strip()
+                individual_summary = self.llm_client.get_summarizer_llm().invoke(summary_prompt).strip()
                 comment["summary"] = individual_summary
                 
                 if idx % 5 == 0:
@@ -207,7 +208,7 @@ Comments:
 Concise summary of discussion topics:"""
         
         # Use the summarize method with max_length to keep it short like article summaries
-        summary = self.ollama_client.summarize(comments_text, max_length=150)
+        summary = self.llm_client.summarize(comments_text, max_length=150)
         
         # Get sentiment analysis
         sentiment_result = self._analyze_comment_sentiment(comments_text)
@@ -251,7 +252,7 @@ Where:
 JSON:"""
         
         try:
-            response = self.ollama_client.get_filter_llm().invoke(prompt).strip()
+            response = self.llm_client.get_filter_llm().invoke(prompt).strip()
             
             # Extract JSON if wrapped in markdown code blocks
             if "```json" in response:
@@ -339,7 +340,7 @@ Where:
 JSON:"""
         
         try:
-            response = self.ollama_client.get_filter_llm().invoke(prompt).strip()
+            response = self.llm_client.get_filter_llm().invoke(prompt).strip()
             
             # Extract JSON if wrapped in markdown code blocks
             if "```json" in response:

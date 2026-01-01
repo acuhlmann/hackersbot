@@ -1,21 +1,29 @@
 # HackerNews AI Summarizer Agent
 
-A multi-agent Python application that scrapes Hacker News, filters AI-related topics, and generates summaries using local Qwen models via Ollama.
+A multi-agent Python application that scrapes Hacker News, filters AI-related topics, and generates summaries using LLMs. Supports both local models (Ollama) and cloud APIs (Deepseek).
 
 ## Features
 
 - Scrapes top N articles from Hacker News
 - Extracts and parses article comments
 - Filters AI-related topics (optional)
-- Generates summaries using local LLM models (Qwen via Ollama)
+- **Multiple LLM providers:**
+  - Local: Ollama with Qwen models
+  - Cloud: Deepseek API (great for mobile/remote access)
+- **Telegram Bot** for mobile access 📱
 - Saves summaries in multiple formats (JSON, Markdown)
 - Console and file output support
 
 ## Prerequisites
 
 - Python 3.9+
-- Ollama installed and running locally
-- Qwen models downloaded in Ollama (e.g., `qwen2.5:7b`, `qwen2.5:14b`)
+- **For local LLM (Ollama):**
+  - Ollama installed and running locally
+  - Qwen models downloaded (e.g., `qwen2.5:7b`)
+- **For cloud LLM (Deepseek):**
+  - Deepseek API key from https://platform.deepseek.com
+- **For Telegram Bot:**
+  - Telegram Bot Token from @BotFather
 
 ## Setup
 
@@ -67,7 +75,7 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Step 4: Configure Environment (Optional)
+### Step 4: Configure Environment
 
 Create a `.env` file for custom configuration:
 ```bash
@@ -78,7 +86,22 @@ copy .env.example .env
 cp .env.example .env
 ```
 
-Edit `.env` if you need to change Ollama settings (defaults work for most setups).
+Edit `.env` to configure your LLM provider and API keys:
+
+```bash
+# Choose provider: 'ollama' (local) or 'deepseek' (cloud)
+LLM_PROVIDER=deepseek
+
+# For Deepseek (cloud API)
+DEEPSEEK_API_KEY=your-api-key-here
+
+# For Telegram Bot
+TELEGRAM_BOT_TOKEN=your-bot-token-here
+
+# For Ollama (local) - optional
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_SUMMARIZER_MODEL=qwen2.5:7b
+```
 
 ### Step 5: Setup Ollama Models
 
@@ -121,6 +144,51 @@ python -m src.main --top-n 3 --output-format file
 python -m src.main --top-n 3 --output-format both
 ```
 
+### Using Deepseek (Cloud API)
+
+```bash
+# Use Deepseek instead of local Ollama
+python -m src.main --top-n 3 --provider deepseek
+
+# With AI filtering using Deepseek
+python -m src.main --top-n 30 --filter-ai --provider deepseek
+```
+
+## 📱 Telegram Bot
+
+Access your HN summaries from anywhere via Telegram!
+
+### Setup
+
+1. Create a bot with [@BotFather](https://t.me/BotFather) on Telegram
+2. Copy the bot token
+3. Set environment variables:
+   ```bash
+   export TELEGRAM_BOT_TOKEN=your-bot-token
+   export DEEPSEEK_API_KEY=your-deepseek-key
+   ```
+
+### Run the Bot
+
+```bash
+# Run with Deepseek (recommended for mobile)
+python -m src.telegram_bot
+
+# Run with local Ollama
+python -m src.telegram_bot --provider ollama
+```
+
+### Bot Commands
+
+| Command | Description |
+|---------|-------------|
+| `/start` | Welcome message and help |
+| `/summary` | Get top 3 articles summarized |
+| `/summary 5` | Get top 5 articles summarized |
+| `/ai` | Get AI-related articles only |
+| `/ai 20` | Scan top 20 for AI articles |
+| `/help` | Show help message |
+
 ## Output
 
 Summaries are saved in the `outputs/` directory with timestamps:
@@ -136,9 +204,17 @@ The application uses a multi-agent architecture:
 
 ## Configuration
 
-Edit `.env` to customize:
-- Ollama base URL (default: http://localhost:11434)
-- Model names for different tasks
+Edit `.env` to customize your setup:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LLM_PROVIDER` | `ollama` | LLM provider: `ollama` or `deepseek` |
+| `DEEPSEEK_API_KEY` | - | Your Deepseek API key |
+| `DEEPSEEK_MODEL` | `deepseek-chat` | Deepseek model to use |
+| `TELEGRAM_BOT_TOKEN` | - | Telegram bot token from @BotFather |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL |
+| `OLLAMA_SUMMARIZER_MODEL` | `qwen2.5:7b` | Model for summarization |
+| `OLLAMA_FILTER_MODEL` | `qwen2.5:7b` | Model for AI classification |
 
 ## License
 
