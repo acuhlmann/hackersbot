@@ -1,7 +1,7 @@
 """Filter agent for identifying AI-related topics"""
 
-from typing import List, Dict, Optional, Any
-from src.models.ollama_client import OllamaClient
+from typing import List, Dict, Optional, Any, Union
+from src.models.llm_client import LLMClient, get_llm_client
 
 # Type alias for article dictionaries
 Article = Dict[str, Any]
@@ -11,14 +11,15 @@ Classification = Dict[str, Any]
 class FilterAgent:
     """Filters articles to identify AI-related topics"""
     
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None, provider: Optional[str] = None):
         """
         Initialize filter agent.
         
         Args:
-            ollama_client: Optional OllamaClient instance (creates new one if not provided)
+            llm_client: Optional LLMClient instance (creates new one if not provided)
+            provider: LLM provider ('ollama' or 'deepseek') if creating new client
         """
-        self.ollama_client = ollama_client or OllamaClient()
+        self.llm_client = llm_client or get_llm_client(provider=provider)
     
     def filter_ai_articles(self, articles: List[Dict], min_confidence: float = 0.5) -> List[Dict]:
         """
@@ -56,8 +57,8 @@ class FilterAgent:
         url = article.get("url", "")
         content = article.get("content", "")
         
-        # Use Ollama client to classify
-        classification = self.ollama_client.classify_ai_topic(
+        # Use LLM client to classify
+        classification = self.llm_client.classify_ai_topic(
             title=title,
             url=url,
             content=content

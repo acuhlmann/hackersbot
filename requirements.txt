@@ -7,6 +7,12 @@ python-dotenv>=1.0.0
 click>=8.1.0
 lxml>=4.9.0
 
+# Deepseek API (OpenAI-compatible client)
+openai>=1.0.0
+
+# Telegram Bot
+python-telegram-bot>=21.0
+
 # Testing dependencies
 pytest>=8.0.0
 pytest-mock>=3.12.0

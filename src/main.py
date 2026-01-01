@@ -14,6 +14,7 @@ from src.agents.filter_agent import FilterAgent
 from src.agents.summarizer_agent import SummarizerAgent
 from src.utils.storage import Storage
 from src.utils.formatters import Formatter
+from src.models.llm_client import get_llm_client
 
 
 @click.command()
@@ -45,7 +46,13 @@ from src.utils.formatters import Formatter
     is_flag=True,
     help="Skip comment summarization (faster)"
 )
-def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float, no_comments: bool):
+@click.option(
+    "--provider",
+    type=click.Choice(["ollama", "deepseek"], case_sensitive=False),
+    default="ollama",
+    help="LLM provider: ollama (local) or deepseek (cloud API). Default: ollama"
+)
+def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float, no_comments: bool, provider: str):
     """
     HackerNews AI Summarizer - Scrape and summarize top articles from Hacker News.
     
@@ -57,11 +64,15 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
     """
     click.echo("🚀 Starting HackerNews AI Summarizer...")
     click.echo(f"📊 Fetching top {top_n} articles...")
+    click.echo(f"🤖 Using LLM provider: {provider}")
     
-    # Initialize agents
+    # Initialize shared LLM client
+    llm_client = get_llm_client(provider=provider)
+    
+    # Initialize agents with shared LLM client
     scraper = ScraperAgent()
-    filter_agent = FilterAgent()
-    summarizer = SummarizerAgent()
+    filter_agent = FilterAgent(llm_client=llm_client)
+    summarizer = SummarizerAgent(llm_client=llm_client)
     storage = Storage()
     
     # Step 1: Scrape articles
@@ -98,7 +109,8 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
         "filter_ai": filter_ai,
         "min_confidence": min_confidence if filter_ai else None,
         "include_comments": not no_comments,
-        "articles_count": len(articles)
+        "articles_count": len(articles),
+        "llm_provider": provider
     }
     
     if output_format in ["console", "both"]:
