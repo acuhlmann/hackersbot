@@ -1,48 +1,665 @@
 {
   "metadata": {
-    "top_n": 5,
+    "top_n": 2,
     "filter_ai": false,
     "include_comments": true,
-    "articles_count": 1,
+    "articles_count": 2,
     "llm_provider": "auto"
   },
   "articles": [
     {
-      "id": "123",
+      "id": "46488819",
       "rank": 1,
-      "title": "Test Article from Hacker News",
-      "url": "https://example.com/article",
-      "points": 100,
-      "author": "testuser",
-      "time": "2 hours ago",
-      "comment_count": 10,
-      "comment_url": "https://news.ycombinator.com/item?id=123",
+      "title": "Lessons from 14 Years at Google",
+      "url": "https://addyosmani.com/blog/21-lessons/",
+      "points": 185,
+      "author": "cdrnsf",
+      "time": "2026-01-04T15:23:54 1767540234",
+      "comment_count": 62,
+      "comment_url": "https://news.ycombinator.com/item?id=46488819",
       "comments": [
         {
-          "id": "c1",
-          "author": "user1",
-          "text": "This is a great article about technology and AI.",
-          "time": "1 hour ago",
+          "id": "46490256",
+          "author": "trescenzi",
+          "text": "> 4. Clarity is seniority. Cleverness is overhead.\nClarity is likely the most important aspect of making maintainable, extendable code. Of course, it’s easy to say that, it’s harder to explain what it looks like in practice.\nI wrote a book that attempts to teach how to write clear code:\nhttps://elementsofcode.io\n> 11. Abstractions don’t remove complexity. They move it to the day you’re on call.\nThis is true for bad abstractions.\n> The purpose of abstraction is not to be vague, but to create a new semantic level in which one can be absolutely precise.\nIf you think about abstraction in those terms, the utility becomes apparent. We abstract CPU instructions into programming languages so we can think about our problems in more precise terms, such as data structures and functions.\nIt is obviously useful to build abstractions to create even higher levels of precision on top of the language itself.\nThe problem isn’t abstraction, it is clarity of purpose. Too often we create complex behavioral models before actually understanding the behavior we are trying to model. It’s like a civil engineer trying to build a bridge in a warehouse without examining the terrain where it must be placed. When it doesn’t fit correctly, we don’t blame the concept of bridges.",
+          "time": "2026-01-04T16:50:56 1767545456",
           "indent_level": 0
+        },
+        {
+          "id": "46489702",
+          "author": "jacquesm",
+          "text": "> At scale, even your bugs have users.\nFirst place I worked right out of college had a big training seminar for new hires. One day we were told the story of how they’d improved load times from around 5min to 30seconds, this improvement was in the mid 90s. The negative responses from clients were instant. The load time improvements had destroyed their company culture. Instead of everyone coming into the office, turning on their computers, and spending the next 10min chatting and drinking coffee the software was ready before they’d even stood up from their desk!\nThe moral of the story, and the quote, isn’t that you shouldn’t improve things. Instead it’s a reminder that the software you’re building doesn’t exist in a PRD or a test suite. It’s a system that people will interact with out there in the world. Habits with form, workarounds will be developed, bugs will be leaned for actual use cases.\nThis makes it critically important that you, the software engineer, understand the purpose and real world usage of your software. Your job isn’t to complete tickets that fulfill a list of asks from your product manager. Your job is to build software that solves users problems.",
+          "time": "2026-01-04T17:18:10 1767547090",
+          "indent_level": 0
+        },
+        {
+          "id": "46489981",
+          "author": "kyrra",
+          "text": "For close to a decade my business revolved around a common bug in both Microsoft and Netscape, the dominant browsers of the day. With every release we were thinking 'this time they'll fix it' and that would have caused us some serious headaches. But they never did!",
+          "time": "2026-01-04T17:27:13 1767547633",
+          "indent_level": 1
+        },
+        {
+          "id": "46490091",
+          "author": "hbs18",
+          "text": "This was well talked about in Hyrums Law, which came from a Googler as well.\nhttps://www.hyrumslaw.com/\n> With a sufficient number of users of an API,\nit does not matter what you promise in the contract:\nall observable behaviors of your system\nwill be depended on by somebody.",
+          "time": "2026-01-04T17:20:10 1767547210",
+          "indent_level": 1
+        },
+        {
+          "id": "46490012",
+          "author": "damethos",
+          "text": "So what is the correct solution to that specific problem then, adjust loading time per customer?",
+          "time": "2026-01-04T17:22:31 1767547351",
+          "indent_level": 1
+        },
+        {
+          "id": "46490039",
+          "author": "ramijames",
+          "text": "Probably just let them vent until they adjust their habits and just chat with their co-workers, without the need to use this as an excuse. Then, they can enjoy the fast loading times :)",
+          "time": "2026-01-04T17:25:30 1767547530",
+          "indent_level": 2
+        },
+        {
+          "id": "46490078",
+          "author": "dchftcs",
+          "text": "Ignoring the users is the correct solution. Defining company culture through software loading is ridiculous.",
+          "time": "2026-01-04T17:34:29 1767548069",
+          "indent_level": 2
+        },
+        {
+          "id": "46490168",
+          "author": "alex1138",
+          "text": "Their bosses are likely happier for the lower downtime required to run the software anyway.",
+          "time": "2026-01-04T17:22:52 1767547372",
+          "indent_level": 3
+        },
+        {
+          "id": "46490048",
+          "author": "thelastgallon",
+          "text": "https://xkcd.com/1172/",
+          "time": "2026-01-04T17:39:50 1767548390",
+          "indent_level": 1
+        },
+        {
+          "id": "46490217",
+          "author": "simonw",
+          "text": "Hyrum's Law:\nhttps://www.hyrumslaw.com/",
+          "time": "2026-01-04T16:48:39 1767545319",
+          "indent_level": 2
+        },
+        {
+          "id": "46489683",
+          "author": "sublimefire",
+          "text": "I first learned about the \"innovation tokens\" idea in \"Novelty is a loan you repay in outages, hiring, and cognitive overhead\" from this, still one of my favorite essays on software architecture:\nhttps://boringtechnology.club/\nLikewise, \"Abstractions don’t remove complexity. They move it to the day you’re on call.\" made me think of this 23 year old classic from Joel Spolsky, the Law of Leaky Abstractions:\nhttps://www.joelonsoftware.com/2002/11/11/the-law-of-leaky-a...",
+          "time": "2026-01-04T17:05:58 1767546358",
+          "indent_level": 0
+        },
+        {
+          "id": "46489859",
+          "author": "firefoxd",
+          "text": "I’d agree on most of these but the biggest value in such a list is for the writer to actually put it on paper. You have to reflect on multiple aspects in your career and synthesise those. Reading them is close to useless, like scanning a page full of news, it all just evaporates once you start your daily work routine.\nThe best suggestion would probably be to try and write such a list yourself IMO.",
+          "time": "2026-01-04T16:42:26 1767544946",
+          "indent_level": 0
+        },
+        {
+          "id": "46489623",
+          "author": "sowbug",
+          "text": "They are pretty insightful. Particularly this one:\n> 3. Bias towards action. Ship. You can edit a bad page, but you can’t edit a blank one.\nI have my own version of this where I tell people that no amount of good advice can help you make a blank page look better. You need to have some published work before you can benefit from any advice.",
+          "time": "2026-01-04T17:24:09 1767547449",
+          "indent_level": 0
+        },
+        {
+          "id": "46490061",
+          "author": "llmslave2",
+          "text": "I liked that one, too, but for an additional reason.\nTyping that first character on the page reveals the problems you didn't even know existed. You don't have a keyboard. You do, but it's not plugged in, and you have to move an unexpectedly heavy bookcase to reach the USB port. You need to learn Dvorak. You don't have page-creation privileges and need to open a ticket that will take a week to resolve. You can create the page, but nobody else is able to read it because their machines aren't allowed to install the version of the PageReader™ plugin that your page requires (and you'd need a VP exception to downgrade your PageGenerator™ toolchain to their version). And so on.\nAll these are silent schedule killers that reveal themselves only once you've shipped one full development (and deployment!) cycle. And as ridiculous as these example problems seem, they're not far from reality at a place as big and intricate as Google.",
+          "time": "2026-01-04T17:27:43 1767547663",
+          "indent_level": 1
+        },
+        {
+          "id": "46490096",
+          "author": "samiv",
+          "text": "I wish Google would be biased a little more towards quality and performance. Their user-facing products tend to be full of jank, although Gmail is quite good to be fair.\nIn general I think the \"ship fast and break things\" mentality assumes a false dilemma, as if the alternative to shipping broken software is to not ship at all. If thats the mentality no wonder software sucks today. I'd rather teams shipped working, correct, and performant software even if it meant delaying additional features or shipping a constrained version of their vision. The minimalism of the software would probably end up being a net benefit instead of stuffing it full of half baked features anyways.",
+          "time": "2026-01-04T17:36:08 1767548168",
+          "indent_level": 1
+        },
+        {
+          "id": "46490187",
+          "author": "rapidfl",
+          "text": "I wish people who ship crappy software didn't ship it and would let someone else ship something better instead.\nIt really sucks when the first mover / incumbent is some crappy half assed solution.\nBut unfortunately we live in a world where quality is largely irrelevant and other USPs are more important. For example these little weekend projects that become successful despite their distinct lack of quality\nLinux kernel - free Unix.\nJavaScript - scripting in browser\nPython - sane \"perl\"\nToday on GitHub alone you can probably find 100 more featured and higher quality projects than any of these were when they launched but nobody cares.",
+          "time": "2026-01-04T17:14:45 1767546885",
+          "indent_level": 2
+        },
+        {
+          "id": "46489943",
+          "author": "sowbug",
+          "text": "It is good only if the whole team believes it.\nIf the team mates have a different mindset, they see it as half baked or hacky. And if there is ever some bad feedback, they just use it as a \"I told you so\" and throw you under the bus.",
+          "time": "2026-01-04T17:42:49 1767548569",
+          "indent_level": 1
+        },
+        {
+          "id": "46490247",
+          "author": "kayo_20211030",
+          "text": "If your self-esteem is sufficiently resilient, you can exploit the same human tendencies behind Cunningham's Law (the best way to get the right answer on the internet is not to ask a question; it's to post the wrong answer). Check your crappy end-to-end proof of concept into the team repository, and your teammates will be so horrified and outraged that they'll fix it faster than any sprint could have planned.",
+          "time": "2026-01-04T16:01:04 1767542464",
+          "indent_level": 2
+        },
+        {
+          "id": "46489184",
+          "author": "gdulli",
+          "text": "Every engineer should read this. It's a wonderful collection of heuristics that might seem banal, but which are shimmeringly true.\nThe two that stand out are\n> Novelty is a loan you repay in outages, hiring, and cognitive overhead.\nand\n> Abstractions don’t remove complexity. They move it to the day you’re on call.\nas a warning against about being too, too clever.",
+          "time": "2026-01-04T16:47:05 1767545225",
+          "indent_level": 0
+        },
+        {
+          "id": "46489668",
+          "author": "simonw",
+          "text": "There's rarely a bullet point advantage that some new language or tech stack can offer me that would outweigh ten years of observation of how a familiar setup behaves in production, such that the space of unknown unknowns is reduced to almost nothing.",
+          "time": "2026-01-04T16:51:17 1767545477",
+          "indent_level": 1
+        },
+        {
+          "id": "46489709",
+          "author": "kayo_20211030",
+          "text": "My personal rule is that the new technology stack item needs to either make is possible for me to build something that I couldn't have built without it, or needs to provide a productivity boost significant enough to overcome the productivity lost by straying from the more familiar path - even harder for team projects where multiple people need to learn the new component.",
+          "time": "2026-01-04T16:55:11 1767545711",
+          "indent_level": 2
+        },
+        {
+          "id": "46489757",
+          "author": "pcurve",
+          "text": "Yeah. I'm in agreement there. I guess that it's an application of The Law of Least Surprise for a future developer (who might actually be me, which it often is)",
+          "time": "2026-01-04T16:33:47 1767544427",
+          "indent_level": 3
+        },
+        {
+          "id": "46489530",
+          "author": "imiric",
+          "text": "Agreed.\nNot just engineers, but basically everyone involved in creating products including designers and PMs.\nEvery single bullet point here is gold.",
+          "time": "2026-01-04T17:01:17 1767546077",
+          "indent_level": 1
+        },
+        {
+          "id": "46489824",
+          "author": "GuB-42",
+          "text": "Eh, sure.\nBut at the same time lessons aren't learned by reading what someone else has to say. They're learned by experience, and everyone's is different. An engineer with \"14 years at Google\" hardly makes them an expert at giving career advice, but they sure like to write like it does.\nThis type of article reads more like a promotion piece from self-involved people, than heartfelt advice from someone knowledgeable. This is evident from the author's \"bio\" page, written in 3rd person, and full of aggrandizing claims of their accomplishments, and photos with famous people they've met. I'm conditioned to tune out most of what these characters have to say.\nIf this is the type of people who excel in Big Tech, it must be an insufferable place to be.",
+          "time": "2026-01-04T17:15:22 1767546922",
+          "indent_level": 1
+        },
+        {
+          "id": "46489949",
+          "author": "unlimit",
+          "text": "> At scale, even your bugs have users\nAlso known as ossification. It is a term most often heard in the context of network protocols, but it applies more generally to every system where users depend on unspecified behaviors and even bugs.\nReading about HTTP/3 and QUIC is interesting in that aspect. I first didn't understand the insistance on encryption. Turns out it is not just security and privacy, but by encrypting everything that is not strictly necessary for proper transport, you make it impossible for any \"middlebox\" to make assumptions they shouldn't make.\nI think similar approaches can be used by APIs. Never expose more than what is specified, treat the ability to access internal state as a bug, not because it is secret, but because if users start relying on it, internal changes that shouldn't break anything will.",
+          "time": "2026-01-04T16:56:07 1767545767",
+          "indent_level": 0
+        },
+        {
+          "id": "46489774",
+          "author": "ronbenton",
+          "text": "I am going to file this line\n> If you win every debate, you’re probably accumulating silent resistance.",
+          "time": "2026-01-04T17:25:33 1767547533",
+          "indent_level": 0
+        },
+        {
+          "id": "46490079",
+          "author": "geodel",
+          "text": "That one makes me uncomfortable, which is a bad sign...",
+          "time": "2026-01-04T16:57:02 1767545822",
+          "indent_level": 1
+        },
+        {
+          "id": "46489786",
+          "author": "jimmyl02",
+          "text": "Seems reasonable. Many points maybe more applicable Google/Google-like companies. With layoffs and overall job shortages a lot of workplaces are having a cake and eating it too. They demand fast delivery and taking shortcuts (calling it\ncreative thinking\n) and once things blow up directly due to shortcuts put blame on developers / testers for taking shortcuts and compromising quality in the process.",
+          "time": "2026-01-04T17:19:24 1767547164",
+          "indent_level": 0
+        },
+        {
+          "id": "46490001",
+          "author": "DougN7",
+          "text": "Usually there are nuggets of wisdom in lists shared like this but I feel like every lesson shared here has immense value.\n> \"remain skeptical of your own certainty\"\n> \"Model curiosity, and you get a team that actually learns.\"\nThese are two lessons that typically require battle scars to learn. For such big ideas to be summed into two sentences is pretty remarkable and puts to words lessons I wish I knew how to share. Amazing article, thanks for sharing!",
+          "time": "2026-01-04T17:27:02 1767547622",
+          "indent_level": 0
+        },
+        {
+          "id": "46490089",
+          "author": "ThrowawayR2",
+          "text": "I was going to skip the article until I read your comment, and wow! You’re totally right - my hard won understanding is there, including things I sort of knew but couldn’t put into words before. Going to share this with my adult kids.",
+          "time": "2026-01-04T16:46:39 1767545199",
+          "indent_level": 1
+        },
+        {
+          "id": "46489666",
+          "author": "aprilthird2021",
+          "text": "> \"\nWriting forces clarity. The fastest way to learn something better is to try teaching it.\n\"\nSomething that seems lost on those using LLMs to augment their textual output.",
+          "time": "2026-01-04T17:38:06 1767548286",
+          "indent_level": 0
+        },
+        {
+          "id": "46490201",
+          "author": "paulpauper",
+          "text": "This article is partly LLM generated or edited, fairly certain",
+          "time": "2026-01-04T17:43:24 1767548604",
+          "indent_level": 1
+        },
+        {
+          "id": "46490253",
+          "author": "NitpickLawyer",
+          "text": "I think it's inevitable everyone will use LLMs to assist with writing, such as editing, if it hasn't happen already. It's like having a free editor, beyond grammar or spell-checking.",
+          "time": "2026-01-04T17:21:02 1767547262",
+          "indent_level": 2
+        },
+        {
+          "id": "46490021",
+          "author": "ThrowawayR2",
+          "text": "> You can edit a bad page, but you can’t edit a blank one.",
+          "time": "2026-01-04T17:32:37 1767547957",
+          "indent_level": 1
+        },
+        {
+          "id": "46490156",
+          "author": "xnx",
+          "text": "Ideally, yes, but the final result of LLM assisted textual output by many users shows that they often have neglected the editing part just as much as they have neglected the writing part.",
+          "time": "2026-01-04T16:54:40 1767545680",
+          "indent_level": 2
+        },
+        {
+          "id": "46489751",
+          "author": "ethagnawl",
+          "text": "Nothing novel, but all true, well expressed, and worth repeating. This should be part of every CS curriculum.\n#2 and #14 are tough pills to swallow. It's not enough to be right, or even have a long track record of being right. You usually have to convince others that it was their idea all along, but still advocate for yourself at performance review time.",
+          "time": "2026-01-04T17:05:00 1767546300",
+          "indent_level": 0
+        },
+        {
+          "id": "46489846",
+          "author": "blibble",
+          "text": "14 years? Wild. I remember when Addy came into the scene hot with a new jQuery tutorial (what seemed like) every few days. To be clear, that's not a knock despite how it may read in 2026.",
+          "time": "2026-01-04T17:32:26 1767547946",
+          "indent_level": 0
+        },
+        {
+          "id": "46490155",
+          "author": "nickcw",
+          "text": "seems the real lesson would be to not spend 14 years at google",
+          "time": "2026-01-04T16:43:50 1767545030",
+          "indent_level": 0
+        },
+        {
+          "id": "46489640",
+          "author": "davelee",
+          "text": "I like this one\n> At scale, even your bugs have users.\nSomething I discovered the hard way over many years of maintaining rclone. Fixing a bug has consequences and there are sometimes users depending on that bug!\nxkcd:\nhttps://xkcd.com/1172/",
+          "time": "2026-01-04T16:49:33 1767545373",
+          "indent_level": 0
+        },
+        {
+          "id": "46489689",
+          "author": "davidw",
+          "text": "I know this as Hyrum's Law (which also comes from a Googler):\n\"With a sufficient number of users of an API,\nit does not matter what you promise in the contract:\nall observable behaviors of your system\nwill be depended on by somebody.\"\nhttps://www.hyrumslaw.com/",
+          "time": "2026-01-04T16:50:26 1767545426",
+          "indent_level": 1
+        },
+        {
+          "id": "46489699",
+          "author": "baal80spam",
+          "text": "It's a good one: but it's also good to see that most of these are applicable to all kinds of organizations, not just \"Google Scale\" places.",
+          "time": "2026-01-04T16:47:53 1767545273",
+          "indent_level": 1
+        },
+        {
+          "id": "46489673",
+          "author": "nemo1618",
+          "text": "Thank you for your work on maintaining rclone! It is a wonderful and very underappreciated piece of software.",
+          "time": "2026-01-04T17:25:24 1767547524",
+          "indent_level": 1
+        },
+        {
+          "id": "46490075",
+          "author": "papacj657",
+          "text": "The skill isn’t being right. It’s entering discussions to align on the problem.\n Clarity isn’t a style preference - it’s operational risk reduction.\n The punchline isn’t “never innovate.” It’s “innovate only where you’re uniquely paid to innovate.”\n This isn’t strictly about self-promotion. It’s about making the value chain legible to everyone.\n The problem isn’t that engineers can’t write code or use AI to do so. It’s that we’re so good at writing it that we forget to ask whether we should.\n This isn’t passive acceptance but it is strategic focus.\n This isn’t just about being generous with knowledge. It’s a selfish learning hack.\n Insist on interpreting trends, not worshiping thresholds. The goal is insight, not surveillance.\n Senior engineers who say “I don’t know” aren’t showing weakness - they’re creating permission.\nI'm so tired bros",
+          "time": "2026-01-04T17:31:25 1767547885",
+          "indent_level": 0
+        },
+        {
+          "id": "46490136",
+          "author": "spiralcoaster",
+          "text": "So glad I’m not the only one that noticed that.\nThere’s some really solid insights here, but the editing with AI to try to make up for an imperfect essay just makes the points they’re trying to convey less effective.\nThe lines between what is the author’s ideas and what is AI trying to finish a half or even mostly baked idea just removes so much of the credibility.\nAnd it’s completely counter to the “clarity vs cleverness” idea and the just get something out there instead of trying to get it perfect.",
+          "time": "2026-01-04T17:28:50 1767547730",
+          "indent_level": 1
+        },
+        {
+          "id": "46490113",
+          "author": "aprilthird2021",
+          "text": "Thank you for doing this. It allowed me to skip reading the article altogether immediately knowing it is AI generated slop. Usually I'm a little ways into it before my LLM detector starts going off, but these \"This isn't X. It's Y.\" phrases are such a dead giveaway.",
+          "time": "2026-01-04T17:39:15 1767548355",
+          "indent_level": 1
+        },
+        {
+          "id": "46490214",
+          "author": "api",
+          "text": "It's just so disrespectful. I put my time in reading this. You (author) couldn't put some time into reading this once over before publishing?\nThe points are generally good too, which is why the AI slop tone bothers me even more.",
+          "time": "2026-01-04T16:56:04 1767545764",
+          "indent_level": 1
+        },
+        {
+          "id": "46489773",
+          "author": "elktown",
+          "text": "The biggest one that resonates with me is that cleverness is overhead.\nMy #1 issue with mid level engineers is that they like complexity and find complexity fun and interesting.\nAn experienced engineer knows that complexity is irritating and frustrating and that a simple solution is harder and superior.\nA solution that simultaneously solves the problem\nand\nreduces complexity is almost the definition of genius. If you are good you will do this a few times in your whole career.",
+          "time": "2026-01-04T17:05:40 1767546340",
+          "indent_level": 0
+        },
+        {
+          "id": "46489855",
+          "author": "api",
+          "text": "> A solution that simultaneously solves the problem and reduces complexity is almost the definition of genius.\nWell put. Chasing \"How simple can we make this?\" is a large part of what makes this job enjoyable to me. But it's perhaps not a good career advice.",
+          "time": "2026-01-04T17:17:23 1767547043",
+          "indent_level": 1
+        },
+        {
+          "id": "46489967",
+          "author": "suralind",
+          "text": "Yeah, \"resume driven development\" is a second major force pushing complexity that I didn't mention. People want to be able to get experience with as many buzzwords and technologies and stacks as they can for obvious personal self interest reasons.\nThe incentive is real. A great programmer who does a great job simplifying and building elegant maintainable systems might not get hired because they can't say they have X years experience with a laundry list of things. After all, part of their excellence was in making those things unnecessary.\nIt's a great example of a perverse incentive that's incredibly hard to eliminate. The net effect across the industry is to cost\neveryone\nmoney and time and frustration, not to mention the opportunity cost of what might have been had the cognitive cycles spent wrangling complexity been spent on polish, UI/UX, or innovation.\nThere's also a business and VC level version of this. Every bit of complexity represents a potential niche for a product, service, or startup. You might call this \"product portfolio driven development\" which is just the big brother of \"resume driven development.\"",
+          "time": "2026-01-04T17:07:20 1767546440",
+          "indent_level": 2
+        },
+        {
+          "id": "46489876",
+          "author": "adamnemecek",
+          "text": "Thank you for sharing this. Well articulated.",
+          "time": "2026-01-04T17:16:47 1767547007",
+          "indent_level": 0
+        },
+        {
+          "id": "46489964",
+          "author": "misterchocolat",
+          "text": "> Abstractions don’t remove complexity. They move it to the day you’re on call.\nThen they are bad abstractions. I get where he is coming from, but the entire field is built on abstractions that allow you to translate say a matmul to shuffling some electrons without you doing the shuffling.",
+          "time": "2026-01-04T17:31:17 1767547877",
+          "indent_level": 0
+        },
+        {
+          "id": "46490134",
+          "author": "apsurd",
+          "text": "that was an amazing read",
+          "time": "2026-01-04T16:41:50 1767544910",
+          "indent_level": 0
+        },
+        {
+          "id": "46489620",
+          "author": "rvz",
+          "text": "The writing is excellent.\nVery correlated with the quality of the message I'd imagine.",
+          "time": "2026-01-04T17:41:09 1767548469",
+          "indent_level": 0
+        },
+        {
+          "id": "46490225",
+          "author": "spiralcoaster",
+          "text": "The blog-post is AI generated or at least AI assisted.",
+          "time": "2026-01-04T17:27:06 1767547626",
+          "indent_level": 1
+        },
+        {
+          "id": "46490090",
+          "author": "ronbenton",
+          "text": "It is very heavily filled with LLM-isms. The writing is bland AI output.",
+          "time": "2026-01-04T17:23:14 1767547394",
+          "indent_level": 1
+        },
+        {
+          "id": "46490052",
+          "author": "lklkllko",
+          "text": ">Abstractions don’t remove complexity. They move it to the day you’re on call.\nDamn that's a real one. Nothing like struggling through a bunch of indirection to figure out what the heck a clever abstraction was supposed to do",
+          "time": "2026-01-04T17:21:21 1767547281",
+          "indent_level": 0
+        },
+        {
+          "id": "46490024",
+          "author": "rvz",
+          "text": "14 years in the advertising industry optimizing ways to spy on people and shovel ads down their throats... Congrats on wasting your life",
+          "time": "2026-01-04T17:28:27 1767547707",
+          "indent_level": 0
+        },
+        {
+          "id": "46490106",
+          "author": "igtztorrero",
+          "text": "Some people just want to be remembered for the \"engineering\" / \"social engineering\" they did, while others what to be remembered for being employee of the month for 10+ years at the company.\nBoth are a complete waste of time.\nIt's more impressive if you bootstrapped your own company to millions instead of chasing false praise, engaging in employee politics and being employee #470293 at big company.\nBut I predict you will get the same thing with those at the big AI companies.",
+          "time": "2026-01-04T17:03:28 1767546208",
+          "indent_level": 1
+        },
+        {
+          "id": "46489839",
+          "author": "croemer",
+          "text": "Great post, Years following Addy. I wonder know how he manages his time, in addition to being a leader at Google, and writing such a valuable blog.",
+          "time": "2026-01-04T17:17:38 1767547058",
+          "indent_level": 0
+        },
+        {
+          "id": "46489971",
+          "author": "nostrademons",
+          "text": "I clicked through to the bio and am super confused. Third person, extremely long, lots of pictures with CEOs and smelling of LLM writing.\nHere's a sample:\n> His story isn’t just about writing code, but about inspiring a community to strive for a better web. And perhaps the most exciting chapter is still being written, as he helps shape how AI and the web will intersect in the coming decade. Few individuals have done as much to push the web forward while uplifting its developers, and that legacy will be felt for a long time to come.\nhttps://addyosmani.com/bio/",
+          "time": "2026-01-04T17:22:46 1767547366",
+          "indent_level": 0
+        },
+        {
+          "id": "46490045",
+          "author": "bakugo",
+          "text": "He led Chrome DevRel for many years - if you were learning about new web platform technologies circa 2010-2015 you probably ran across his writing.\nThe bio is cringe, but the important thing to realize about these professional-networking bios is that they are sales pitches, intended to sell a person (and specifically, their experience and connections) to a large corporation who will pay them even more money. An ordinary person, with ordinary authentic emotions, is not the intended audience. They're specifically selling to people whose job is to deal with bullshit.",
+          "time": "2026-01-04T17:27:53 1767547673",
+          "indent_level": 1
+        },
+        {
+          "id": "46490099",
+          "author": "bakugo",
+          "text": "The linked post itself also reeks of LLM writing (negative parallelisms in every other paragraph). But sadly, it seems like this is just the new standard for highly upvoted front page posts.",
+          "time": "2026-01-04T17:27:53 1767547673",
+          "indent_level": 1
         }
       ],
-      "content": "This is the article content about technology.",
-      "article_summary": "This is a test summary generated by the LLM",
-      "comment_summary": "This is a test summary generated by the LLM",
+      "content": "When I joined Google ~14 years ago, I thought the job was about writing great code. I was partly right. But the longer I’ve stayed, the more I’ve realized that the engineers who thrive aren’t necessarily the best programmers - they’re the ones who’ve figured out how to navigate everything around the code: the people, the politics, the alignment, the ambiguity.\nThese lessons are what I wish I’d known earlier. Some would have saved me months of frustration. Others took years to fully understand. None of them are about specific technologies - those change too fast to matter. They’re about the patterns that keep showing up, project after project, team after team.\nI’m sharing them because I’ve benefited enormously from engineers who did the same for me. Consider this my attempt to pay it forward.\n1. The best engineers are obsessed with solving user problems.\nIt’s seductive to fall in love with a technology and go looking for places to apply it. I’ve done it. Everyone has. But the engineers who create the most value work backwards: they become obsessed with understanding user problems deeply, and let solutions emerge from that understanding.\nUser obsession means spending time in support tickets, talking to users, watching users struggle, asking “why” until you hit bedrock. The engineer who truly understands the problem often finds that the elegant solution is simpler than anyone expected.\nThe engineer who starts with a solution tends to build complexity in search of a justification.\n2. Being right is cheap. Getting to right together is the real work.\nYou can win every technical argument and lose the project. I’ve watched brilliant engineers accrue silent resentment by always being the smartest person in the room. The cost shows up later as “mysterious execution issues” and “strange resistance.”\nThe skill isn’t being right. It’s entering discussions to align on the problem, creating space for others, and remaining skeptical of your own certainty.\nStrong opinions, weakly held - not because you lack conviction, but because decisions made under uncertainty shouldn’t be welded to identity.\n3. Bias towards action. Ship. You can edit a bad page, but you can’t edit a blank one.\nThe quest for perfection is paralyzing. I’ve watched engineers spend weeks debating the ideal architecture for something they’ve never built. The perfect solution rarely emerges from thought alone - it emerges from contact with reality. AI can in many ways help here.\nFirst do it, then do it right, then do it better. Get the ugly prototype in front of users. Write the messy first draft of the design doc. Ship the MVP that embarrasses you slightly. You’ll learn more from one week of real feedback than a month of theoretical debate.\nMomentum creates clarity. Analysis paralysis creates nothing.\n4. Clarity is seniority. Cleverness is overhead.\nThe instinct to write clever code is almost universal among engineers. It feels like proof of competence.\nBut software engineering is what happens when you add time and other programmers. In that environment, clarity isn’t a style preference - it’s operational risk reduction.\nYour code is a strategy memo to strangers who will maintain it at 2am during an outage. Optimize for their comprehension, not your elegance. The senior engineers I respect most have learned to trade cleverness for clarity, every time.\n5. Novelty is a loan you repay in outages, hiring, and cognitive overhead.\nTreat your technology choices like an organization with a small “innovation token” budget. Spend one each time you adopt something materially non-standard. You can’t afford many.\nThe punchline isn’t “never innovate.” It’s “innovate only where you’re uniquely paid to innovate.” Everything else should default to boring, because boring has known failure modes.\nThe “best tool for the job” is often the “least-worst tool across many jobs”-because operating a zoo becomes the real tax.\n6. Your code doesn’t advocate for you. People do.\nEarly in my career, I believed great work would speak for itself. I was wrong. Code sits silently in a repository. Your manager mentions you in a meeting, or they don’t. A peer recommends you for a project, or someone else.\nIn large organizations, decisions get made in meetings you’re not invited to, using summaries you didn’t write, by people who have five minutes and twelve priorities. If no one can articulate your impact when you’re not in the room, your impact is effectively optional.\nThis isn’t strictly about self-promotion. It’s about making the value chain legible to everyone- including yourself.\n7. The best code is the code you never had to write.\nWe celebrate creation in engineering culture. Nobody gets promoted for deleting code, even though deletion often improves a system more than addition. Every line of code you don’t write is a line you never have to debug, maintain, or explain.\nBefore you build, exhaust the question: “What would happen if we just… didn’t?” Sometimes the answer is “nothing bad,” and ",
+      "ai_classification": {
+        "is_ai_related": false,
+        "confidence": 0.7,
+        "reasoning": "The article focuses on career advice and personal experiences at Google rather than discussing AI, Machine Learning, or specific AI technologies."
+      },
+      "article_summary": "This text summarizes key lessons learned over 14 years at Google, focusing on aspects beyond technical skills. It emphasizes:\n1. User-centric problem solving over technology obsession.\n2. Collaborative alignment over individual correctness.\n3. Action and iteration over perfectionism.\n4. Clear communication as a form of seniority, with cleverness seen as unnecessary overhead. These lessons highlight the importance of people skills, teamwork, and practical execution in engineering success at Google.",
+      "comment_summary": "The comments discuss key principles in software development, emphasizing clarity over cleverness, the importance of understanding real-world usage, and the consequences of poor abstractions and rushed releases. They highlight Hyrum's Law about API dependencies and warn against overcomplicating solutions or shipping broken software. The discussions also touch on the value of experience over new technologies and the need for a quality-focused mindset across teams. While generally insightful, some critics argue that such advice is more applicable to large tech companies and may not be universally useful.",
+      "comment_sentiment": "positive",
+      "comment_sentiment_score": 0.75,
+      "comment_sentiment_details": "The comments generally focus on practical advice and insights, with a positive tone towards the importance of clarity, quality, and user-centric design in software development.",
+      "comment_topics": [
+        "software development",
+        "code clarity",
+        "abstractions",
+        "user experience"
+      ],
+      "comment_agreement": {
+        "consensus": "mixed",
+        "agreement_score": 0.6,
+        "details": "Commenters have varying opinions on the article's points, with some agreeing and others disagreeing. There is no clear majority.",
+        "key_points": [
+          "clarity vs cleverness in coding",
+          "abstraction and complexity",
+          "user-centric problem solving"
+        ]
+      }
+    },
+    {
+      "id": "46488278",
+      "rank": 2,
+      "title": "Street Fighter II, the World Warrier (2021)",
+      "url": "https://fabiensanglard.net/sf2_warrier/",
+      "points": 148,
+      "author": "birdculture",
+      "time": "2026-01-04T14:30:29 1767537029",
+      "comment_count": 19,
+      "comment_url": "https://news.ycombinator.com/item?id=46488278",
+      "comments": [
+        {
+          "id": "46488478",
+          "author": "state_less",
+          "text": "The true social media. Walk up and stick a quarter on the cabinet. With the ever present sounds of bowling balls hitting pins at the Sports Center, you know exactly which one is yours out of the seven up there. Everybody hovering around, watching and kibitzing. Emotions bounce from stoic concentration to exuberant trash talk. Respect is briefly granted to the kid running the joystick for a half-hour until the hollers and applause when a frame perfect dragon punch knocks him out mid-kick, dethroning the current champ. Quarter laid up again, back in the line for the next dopamine hit shared with strangers.\nWe are more connected than ever, yet still so far apart.",
+          "time": "2026-01-04T15:37:12 1767541032",
+          "indent_level": 0
+        },
+        {
+          "id": "46488931",
+          "author": "random9749832",
+          "text": "We had an Asian store across from the middle school where I hung out and we played Street Fighter for hours after school. The second generation Hmong that came out of the Vietnam war would would hang out and play. We all loved it! I'd often play Ken and they'd play Ryu, haha, we love our avatars. Sometimes I gave them a run for their money, sometimes they taught me new techniques, like a new sequence of moves.\nSome of the other kids on my street went to private schools and I think they missed out on some of the lessons/bonding I got from interacting with a variety of people in public school. It's good to get out into social setting and mix it up with folks.",
+          "time": "2026-01-04T17:37:00 1767548220",
+          "indent_level": 1
+        },
+        {
+          "id": "46490192",
+          "author": "noufalibrahim",
+          "text": "You can still go out there and do things like join a running club. People are still going to arcades in Japan.\nComments like these are kind of ironic.",
+          "time": "2026-01-04T15:33:40 1767540820",
+          "indent_level": 1
+        },
+        {
+          "id": "46488900",
+          "author": "neomantra",
+          "text": "It was somewhat anesthetized compared to running out into an empty lot to play football but yeah better than staring at a screen and calling it networking.",
+          "time": "2026-01-04T15:54:56 1767542096",
+          "indent_level": 1
+        },
+        {
+          "id": "46489110",
+          "author": "rpdillon",
+          "text": "Certainly! I left out the part where I would ride my BMX bike with my friends, without a helmet and without my parents tracking me, 5 miles in an urban environment to get to the arcade, then we'd hike the Hollywood Hills fire trails afterward.",
+          "time": "2026-01-04T16:24:16 1767543856",
+          "indent_level": 2
+        },
+        {
+          "id": "46489446",
+          "author": "BuckRogers",
+          "text": "Very Terminator 2!",
+          "time": "2026-01-04T17:17:41 1767547061",
+          "indent_level": 3
+        },
+        {
+          "id": "46489974",
+          "author": "TZubiri",
+          "text": "Also giving off some Pet Sematary Part Two vibes.",
+          "time": "2026-01-04T16:59:17 1767545957",
+          "indent_level": 4
+        },
+        {
+          "id": "46489803",
+          "author": "578_Observer",
+          "text": "Might be a stretch, but have you tried climbing or similar social sports?\nClimbing is a bit more for young adults, but since the wall is a shared resource, you have a lot of these social interactions, and it's mostly strangers as well, you just walk up, pay for a couple of hours and start climbing.\nI'm sure there's social sports more appropriate for adults and elderly as well.",
+          "time": "2026-01-04T17:17:38 1767547058",
+          "indent_level": 1
+        },
+        {
+          "id": "46489972",
+          "author": "throwaway94275",
+          "text": "As a Japanese banker who grew up in 90s arcades, this deep dive into SF2’s \"World Warrier\" fix is a profound lesson in what I call \"Forging\" (鍛錬).\nThe anecdote about Akiman discovering the typo after the GFX ROMs were already set in stone is the perfect metaphor for the \"Steel vs. Scaffolding\" debate. In modern development, we often rely on the \"scaffolding\" of high-level abstractions, assuming everything is fixable later. But here, the hardware was \"Steel\" (unchangeable).\nAkiman’s solution—using a single-pixel \"pencil tile\" from Guile’s calves to manually mask an 'l' into an 'i'—is a legendary example of \"Mitate\" (見立て): the Japanese art of seeing one thing as another to overcome an absolute limitation.\nIn the world of Japanese \"Shinise\" (long-established companies), this obsessive attention to detail is never called \"inefficient.\" It is the only path to survival across centuries. Akiman famously insisted on the muscular thickness of Chun-Li’s thighs, refusing to compromise because he believed the \"Steel\" (core logic) of a fighter lay in that foundation. If the legs were weak, the character’s soul was dead.\nSF2 remains a legend 30 years later because its creators treated every pixel as \"Steel\" that carried existential risk. This article proves that while \"speed buys information,\" only this level of \"Forging\" buys true longevity. Most fast-scaled software disappears in three years; the \"World Warrier\" still stands after thirty because of that one-pixel pencil.",
+          "time": "2026-01-04T17:23:44 1767547424",
+          "indent_level": 0
+        },
+        {
+          "id": "46490058",
+          "author": "egypturnash",
+          "text": "You are correct about the graphics, but SF2 also absolutely nailed the gameplay. The graphics are just the beginning of the attention to detail in this game.",
+          "time": "2026-01-04T14:38:23 1767537503",
+          "indent_level": 1
+        },
+        {
+          "id": "46488358",
+          "author": "rishabhd",
+          "text": "There is a SF2 cabinet in a burger joint near me. It’s got hand-painted sides instead of the standard stickers. Just last night I was noticing that it says HYRER FIGHTING across the top, and thinking that it is appropriate given the WORLD WARRIER error.",
+          "time": "2026-01-04T17:28:27 1767547707",
+          "indent_level": 0
+        },
+        {
+          "id": "46490105",
+          "author": "taeric",
+          "text": "Amazing story. Here is one of my favorite ones as well, when Naughty Dog intentionally exploited EULA to fix Ratchet and Clank.\nhttps://kylehalladay.com/blog/2019/12/04/Recreating-A-Dirty-...",
+          "time": "2026-01-04T16:41:01 1767544861",
+          "indent_level": 0
+        },
+        {
+          "id": "46489613",
+          "author": "nickdothutton",
+          "text": "Saw this story earlier today and had the same curiosity on how that worked. Neat to see it fully explained.\nIs really neat to consider the way that text was done. I know there are countless stories on how text is difficult on here, but it is hard to remember that \"drawText\" is not a given. Indeed wasn't there on early machines.",
+          "time": "2026-01-04T14:47:23 1767538043",
+          "indent_level": 0
+        },
+        {
+          "id": "46488451",
+          "author": "W0lf",
+          "text": "Reminds me of Continental Circus [1].\n[1].\nhttps://www.arcade-museum.com/Videogame/continental-circuit\nSee section on trivia.",
+          "time": "2026-01-04T16:40:22 1767544822",
+          "indent_level": 0
+        },
+        {
+          "id": "46489608",
+          "author": "LarsDu88",
+          "text": "Thank you for playing Wing Commander!\n:-) Hits the same nerve for me.",
+          "time": "2026-01-04T16:52:51 1767545571",
+          "indent_level": 0
+        },
+        {
+          "id": "46489726",
+          "author": "BiscuitBadger",
+          "text": "3 whole draw calls to draw 3 pixels using Guile's calves. Madness",
+          "time": "2026-01-04T17:31:24 1767547884",
+          "indent_level": 0
+        },
+        {
+          "id": "46490135",
+          "author": "bluedino",
+          "text": "luckily, they're not doing too much on the title screen",
+          "time": "2026-01-04T16:02:08 1767542528",
+          "indent_level": 1
+        },
+        {
+          "id": "46489198",
+          "author": "anyhropic",
+          "text": "Now if someone could patch Double Dragon so it doesn't say \"Bimmy and Jimmy\"",
+          "time": "2026-01-04T16:03:18 1767542598",
+          "indent_level": 0
+        },
+        {
+          "id": "46489211",
+          "author": "sagacity",
+          "text": "That's sort of the point of TFA.",
+          "time": "2026-01-04T16:15:05 1767543305",
+          "indent_level": 0
+        },
+        {
+          "id": "46489355",
+          "author": "sagacity",
+          "text": "That's sort of the point of TFA.",
+          "time": "2026-01-04T16:15:05 1767543305",
+          "indent_level": 1
+        }
+      ],
+      "content": "FABIEN SANGLARD'S WEBSITE\nCONTACT\nRSS\nDONATE\nDec 23, 2021\nStreet Fighter II, The World Warrier\nThis article is part of a\nseries\nabout Street Fighter II and the CPS-1. It is recommended to read the previous entries before reading this one.\nThe embarassing typo\nOne of my favorite anecdote about Street Fighter II is Akiman's account of an issue discovered shortly before shipping.\nJust three days before the deadline, I discovered something horrible. I had made a mistake with the subtitle “World Warrior”, mis-spelling it “World Warrier.”\n- Akiman, Lead graphic design on SF2 (translated by Shmuplation)\nA recreation of the problem. Ouch!\nTo fully understand the issue, we need to dig into how the arcade hardware works. The CPS-1 is a super tile drawing machine. It can draw a lot of tiles but cannot alter them. They are taken from the GFX ROM as they are and sent to the screen (although they can be flipped horizontally or vertically).\nThe GFX ROM and the 68000 instructions ROM as burned separately. The problem Akiman describe is that the GFX ROM had been burned but he could still make changes to the instructions.\nBut how could he fix the mistake if the artwork was set in stone at this point?\nNow I can safely tell this story too, but we actually didn’t discover it until several months after all the sprite work had been done. Since the logo had already been created, I couldn’t just go in and change the letter at this point.\n\"Maybe I can just force it to look like an ‘o’,\" I thought. I tried layering various other sprites over it until finally, it looked like an ‘o’. Phew!\n- Akiman, Lead graphic design on SF2 (translated by Shmuplation)\nAll about details\nAkiman description of the solution left me wanting more details. How did he turn an 'e' into an 'o'? Since I had a sheet extractor, I looked for the text and sure enough, the logo and the typo were found on sheet\n0x7B00\n.\nThe logo is drawn via 16 draw calls using tiles\n0xC8\n,\n0xC9\n,\n0xCA\n,\n0xCB\n,\n0xCC\n,\n0xCD\n,\n0xCE\n,\n0xCF\n,\n0xD8\n,\n0xD9\n,\n0xDA\n,\n0xDB\n,\n0xDC\n,\n0xDD\n,\n0xDE\n, and\n0xDF\n.\nThe way Akiman solved his problem show that you have to be practical in order to ship. He noticed that there was an 'or' in 'World' which would kinda fit in place of the 'ier'. So, he dropped the three last tiles\n0xDD\n,\n0xDE\n, and\n0xDF\nand replaced them with\n0xCD\nand\n0xCE\n.\nThat was better but it only displaced the problem since the borrowed right leg of the 'W' looked like an 'l' instead of an 'i'. The logo now read 'The World Warrlor'.\nAt this point, what was needed was a way to slice the top of the 'l' to make it look like a dot on top of an 'i' but how could he do that since the 68000 cannot write in a tile?\nGuile to the rescue\nThe last part of the puzzle comes from Guile's calves. If you look closely at tile\n0x96\nyou will notice that it has only one pixel visible in the lower left corner.\nGuile palette\nWorld Warrier palette\nSomething that I omitted to mention earlier is that the palette management is entirely under the 68000 control. The CPU is free to issue a tile drawing command using whatever palette it pleases.\nGuile's green palette is not useful since the logo uses blue colors. But if we place them side by side, we notice that index\n14\nis dark green in Guile's palette but dark blue in the logo palette.\nUsing tile\n0x96\nwith the logo palette allows the 68000 to have a (very expensive) system where 255 pixels are wasted to transparency but the 256th can be used like a pencil.\nThat pencil-tile is used to issue three draw command with coordinates overlapping the 'l'. This effectively creates a line which cuts the top part and make it look like the dot at the top of an 'i'.\nIf you ever wondered why the 'i' of 'Warrior' looked weird all these years, now you know.\nEt voila!\nEpilogue\nThe typo was fixed in later versions of Street Fighter 2 where the \"World Warrior\" set of tiles features a proper \"IOR\".\nIronically these are not used since the sub-title was changed from \"World Warrior\" to \"Champion Edition\" and then \"Hyper-fighting\".\n*",
+      "ai_classification": {
+        "is_ai_related": false,
+        "confidence": 0.2,
+        "reasoning": "The article appears to be about a typo in the subtitle of Street Fighter II and does not mention any AI or machine learning technologies."
+      },
+      "article_summary": "Akiman, lead graphic designer on Street Fighter II (SF2), discovered a typo (\"Warrior\" instead of \"Warrior\") just three days before shipping due to separate burning of GFX and instructions ROMs. To fix it, Akiman creatively replaced tiles from the logo with Guile's calf tile, altering the 'l' to look like an 'i'. This practical solution ensured the game shipped on time despite the hardware constraints.",
+      "comment_summary": "The comments revolve around the enduring appeal of classic arcade games like Street Fighter II (SF2), highlighting how they fostered social interactions and community engagement among diverse groups. Key points include the emotional and competitive atmosphere in arcades, the physical activities like climbing that offer similar social experiences, and the technical challenges and attention to detail involved in game development, such as fixing graphics errors with minimal resources. These discussions underscore the lasting impact of these games on social bonding and the craft of game design.",
       "comment_sentiment": "positive",
       "comment_sentiment_score": 0.8,
-      "comment_sentiment_details": "Test details",
+      "comment_sentiment_details": "The comments generally express nostalgia and appreciation for the social interactions and gaming experiences described, with a positive tone towards the games and activities mentioned.",
       "comment_topics": [
-        "AI",
-        "tech"
+        "nostalgia",
+        "gaming",
+        "social interaction"
       ],
       "comment_agreement": {
         "consensus": "neutral",
         "agreement_score": 0.5,
-        "details": "Test details",
-        "key_points": []
+        "details": "Comments do not directly address the article's main point about Akiman’s creative solution to fix the typo in Street Fighter II. Instead, they focus on personal experiences and reflections related to gaming culture and social interactions.",
+        "key_points": [
+          "gaming culture",
+          "social interactions",
+          "personal anecdotes"
+        ]
       }
     }
   ],
-  "generated_at": "2026-01-05T01:42:59.314481"
+  "generated_at": "2026-01-05T01:45:19.857585"
 }

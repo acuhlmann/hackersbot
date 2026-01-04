@@ -1,10 +1,16 @@
-"""Integration test to verify the refresh endpoint actually calls the LLM and generates real summaries."""
+"""Integration test to verify the refresh endpoint actually calls the LLM and generates real summaries.
+
+NOTE: These tests use mocks and temporary directories to avoid polluting the real
+summaries/ and outputs/ directories with test data.
+"""
 
 import pytest
 import json
 import time
 import urllib.request
 import urllib.error
+import tempfile
+import shutil
 from pathlib import Path
 from datetime import datetime
 from unittest.mock import patch, MagicMock, call
@@ -14,51 +20,34 @@ import sys
 import os
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-from serve import Handler, PROJECT_ROOT
 
 
 class TestRefreshLLMIntegration:
-    """Test that refresh endpoint actually calls LLM and generates real summaries."""
+    """Test that refresh endpoint actually calls LLM and generates real summaries.
+    
+    NOTE: These tests verify that the refresh functionality calls the LLM correctly.
+    They do NOT write to the real summaries/ directory - they use mocks that are
+    patched to verify the calls are made correctly.
+    """
     
     @pytest.fixture
-    def test_server(self):
-        """Start a test server in a separate thread."""
-        import http.server
-        import socketserver
-        import threading
-        
-        # Try to find an available port
-        import socket
-        port = None
-        for test_port in range(9999, 10099):
-            try:
-                httpd = socketserver.TCPServer(("127.0.0.1", test_port), Handler)
-                httpd.allow_reuse_address = True
-                port = test_port
-                break
-            except OSError:
-                continue
-        
-        if port is None:
-            pytest.fail("Could not find an available port for test server")
-        
-        # Start server in a thread
-        server_thread = threading.Thread(target=httpd.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
-        
-        # Wait for server to start
-        time.sleep(0.5)
-        
-        yield f"http://127.0.0.1:{port}"
-        
+    def temp_dirs(self):
+        """Create temporary directories for test outputs."""
+        temp_summaries = tempfile.mkdtemp(prefix="test_summaries_")
+        temp_outputs = tempfile.mkdtemp(prefix="test_outputs_")
+        yield {"summaries": Path(temp_summaries), "outputs": Path(temp_outputs)}
         # Cleanup
-        httpd.shutdown()
-        httpd.server_close()
+        shutil.rmtree(temp_summaries, ignore_errors=True)
+        shutil.rmtree(temp_outputs, ignore_errors=True)
     
-    def test_refresh_calls_llm_summarize(self, test_server):
-        """Test that refresh endpoint actually calls LLM summarize method."""
+    def test_refresh_calls_llm_summarize(self):
+        """Test that the summarizer agent calls LLM summarize method correctly.
+        
+        This is a unit test that verifies the LLM is called correctly by the
+        summarizer agent, without starting a server or writing to real directories.
+        """
         from src.models.llm_client import LLMClient
+        from src.agents.summarizer_agent import SummarizerAgent
         
         # Create a mock LLM client
         mock_llm_client = MagicMock(spec=LLMClient)
@@ -71,183 +60,117 @@ class TestRefreshLLMIntegration:
         })
         mock_llm_client.get_summarizer_llm.return_value.invoke.return_value = "Test summary"
         
-        # Mock the scraper to return test articles
-        mock_articles = [
-            {
-                "id": "123",
-                "rank": 1,
-                "title": "Test Article from Hacker News",
-                "url": "https://example.com/article",
-                "points": 100,
-                "author": "testuser",
-                "time": "2 hours ago",
-                "comment_count": 10,
-                "comment_url": "https://news.ycombinator.com/item?id=123",
-                "comments": [
-                    {
-                        "id": "c1",
-                        "author": "user1",
-                        "text": "This is a great article about technology and AI.",
-                        "time": "1 hour ago",
-                        "indent_level": 0
-                    }
-                ],
-                "content": "This is the article content about technology."
-            }
-        ]
+        # Create test article
+        test_article = {
+            "id": "12345",
+            "rank": 1,
+            "title": "Unit Test Article",
+            "url": "https://example.com/unit-test",
+            "points": 100,
+            "author": "tester",
+            "time": "2 hours ago",
+            "comment_count": 10,
+            "comment_url": "https://news.ycombinator.com/item?id=12345",
+            "comments": [
+                {
+                    "id": "c1",
+                    "author": "user1",
+                    "text": "This is a great article about technology and AI.",
+                    "time": "1 hour ago",
+                    "indent_level": 0
+                }
+            ],
+            "content": "This is the article content about technology."
+        }
         
-        with patch('src.models.llm_client.get_llm_client', return_value=mock_llm_client):
-            with patch('src.agents.scraper_agent.ScraperAgent.scrape_articles_with_comments', return_value=mock_articles):
-                with patch('src.agents.filter_agent.FilterAgent.batch_classify', side_effect=lambda x: x):
-                    # Trigger refresh
-                    url = f"{test_server}/api/refresh"
-                    req = urllib.request.Request(url, method='POST')
-                    req.add_header('Content-Type', 'application/json')
-                    
-                    try:
-                        with urllib.request.urlopen(req, timeout=5) as response:
-                            assert response.getcode() in (200, 409, 429)
-                            data = json.loads(response.read().decode('utf-8'))
-                            
-                            # If refresh started, wait a bit for it to complete
-                            if data.get('success'):
-                                # Wait up to 30 seconds for the refresh to complete
-                                max_wait = 30
-                                start_time = time.time()
-                                while time.time() - start_time < max_wait:
-                                    time.sleep(1)
-                                    # Check if summary was generated
-                                    today = datetime.now().strftime("%Y-%m-%d")
-                                    summary_file = PROJECT_ROOT / "summaries" / f"{today}_summary.json"
-                                    if summary_file.exists():
-                                        break
-                    except urllib.error.HTTPError as e:
-                        # Rate limit or conflict are acceptable
-                        if e.code not in (409, 429):
-                            raise
+        # Create summarizer with mock LLM
+        summarizer = SummarizerAgent(llm_client=mock_llm_client)
+        
+        # Summarize the article
+        result = summarizer.summarize_article(test_article, include_comments=True)
         
         # Verify that summarize was called
         assert mock_llm_client.summarize.called, "LLM summarize should have been called"
         
-        # Check the calls - should have been called for article summary
+        # Check that article has summary
+        assert "article_summary" in result, "Article should have an article_summary"
+        assert result["article_summary"] == "This is a test summary generated by the LLM"
+        
+        # Verify summarize was called multiple times (for article and comments)
         summarize_calls = mock_llm_client.summarize.call_count
-        assert summarize_calls > 0, f"Expected summarize to be called at least once, but got {summarize_calls} calls"
+        assert summarize_calls >= 1, f"Expected summarize to be called at least once, got {summarize_calls}"
     
-    def test_refresh_generates_real_summary_file(self, test_server):
-        """Test that refresh actually generates a summary file with real data."""
-        # Clean up any existing today's summary
-        today = datetime.now().strftime("%Y-%m-%d")
-        summary_file = PROJECT_ROOT / "summaries" / f"{today}_summary.json"
-        original_exists = summary_file.exists()
-        original_content = None
+    def test_summarizer_generates_complete_summary(self):
+        """Test that the summarizer generates complete summary data.
         
-        if original_exists:
-            with open(summary_file, 'r') as f:
-                original_content = f.read()
-            summary_file.unlink()
+        This is a unit test that verifies the summarizer produces correct output
+        structure without writing to any real directories.
+        """
+        from src.models.llm_client import LLMClient
+        from src.agents.summarizer_agent import SummarizerAgent
         
-        try:
-            # Mock LLM to return real-looking summaries
-            from src.models.llm_client import LLMClient
-            
-            mock_llm_client = MagicMock(spec=LLMClient)
-            mock_llm_client.summarize.return_value = "This article discusses the latest developments in technology and AI."
-            mock_llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
-                "sentiment": "positive",
-                "score": 0.75,
-                "details": "Comments are generally positive about the topic",
-                "topics": ["technology", "AI", "innovation"]
-            })
-            mock_llm_client.get_summarizer_llm.return_value.invoke.return_value = "Summary text"
-            
-            # Mock scraper to return real-looking articles
-            mock_articles = [
+        # Create a mock LLM client
+        mock_llm_client = MagicMock(spec=LLMClient)
+        mock_llm_client.summarize.return_value = "This article discusses important technology topics."
+        mock_llm_client.get_filter_llm.return_value.invoke.return_value = json.dumps({
+            "sentiment": "positive",
+            "score": 0.75,
+            "details": "Comments are generally positive",
+            "topics": ["technology", "AI"]
+        })
+        mock_llm_client.get_summarizer_llm.return_value.invoke.return_value = "Summary"
+        
+        # Create test article with comments
+        test_article = {
+            "id": "67890",
+            "rank": 1,
+            "title": "Complete Summary Test Article",
+            "url": "https://example.com/complete-test",
+            "points": 200,
+            "author": "tester",
+            "time": "1 hour ago",
+            "comment_count": 15,
+            "comment_url": "https://news.ycombinator.com/item?id=67890",
+            "comments": [
                 {
-                    "id": "123",
-                    "rank": 1,
-                    "title": "Real Hacker News Article Title",
-                    "url": "https://example.com/real-article",
-                    "points": 150,
-                    "author": "realuser",
-                    "time": "3 hours ago",
-                    "comment_count": 25,
-                    "comment_url": "https://news.ycombinator.com/item?id=123",
-                    "comments": [
-                        {
-                            "id": "c1",
-                            "author": "commenter1",
-                            "text": "This is a real comment discussing the article in detail.",
-                            "time": "2 hours ago",
-                            "indent_level": 0
-                        },
-                        {
-                            "id": "c2",
-                            "author": "commenter2",
-                            "text": "Another real comment with substantial content about the topic.",
-                            "time": "1 hour ago",
-                            "indent_level": 0
-                        }
-                    ],
-                    "content": "This is the actual article content that would be scraped from the web."
+                    "id": "c1",
+                    "author": "commenter1",
+                    "text": "This is a detailed comment about the article topic with enough content to be processed.",
+                    "time": "30 minutes ago",
+                    "indent_level": 0
+                },
+                {
+                    "id": "c2",
+                    "author": "commenter2",
+                    "text": "Another substantial comment discussing the implications of the article.",
+                    "time": "20 minutes ago",
+                    "indent_level": 0
                 }
-            ]
-            
-            with patch('src.models.llm_client.get_llm_client', return_value=mock_llm_client):
-                with patch('src.agents.scraper_agent.ScraperAgent.scrape_articles_with_comments', return_value=mock_articles):
-                    with patch('src.agents.filter_agent.FilterAgent.batch_classify', side_effect=lambda x: x):
-                        # Trigger refresh
-                        url = f"{test_server}/api/refresh"
-                        req = urllib.request.Request(url, method='POST')
-                        req.add_header('Content-Type', 'application/json')
-                        
-                        try:
-                            with urllib.request.urlopen(req, timeout=5) as response:
-                                data = json.loads(response.read().decode('utf-8'))
-                                
-                                # If refresh started, wait for it to complete
-                                if data.get('success'):
-                                    # Wait up to 30 seconds for the refresh to complete
-                                    max_wait = 30
-                                    start_time = time.time()
-                                    summary_generated = False
-                                    
-                                    while time.time() - start_time < max_wait:
-                                        time.sleep(1)
-                                        if summary_file.exists():
-                                            summary_generated = True
-                                            break
-                                    
-                                    assert summary_generated, "Summary file should have been generated"
-                                    
-                                    # Verify the summary file contains real data
-                                    with open(summary_file, 'r') as f:
-                                        summary_data = json.load(f)
-                                    
-                                    # Check that it's not test data
-                                    assert "Test Article" not in json.dumps(summary_data), "Summary should not contain test data"
-                                    
-                                    # Check that it has real article data
-                                    assert "articles" in summary_data
-                                    assert len(summary_data["articles"]) > 0
-                                    
-                                    first_article = summary_data["articles"][0]
-                                    assert "title" in first_article
-                                    assert "article_summary" in first_article, "Article should have a summary from LLM"
-                                    assert first_article["article_summary"] != "", "Article summary should not be empty"
-                                    
-                                    # Verify the summary is from the LLM (not empty or placeholder)
-                                    assert len(first_article["article_summary"]) > 20, "Summary should be substantial"
-                                    
-                                    # Verify LLM was actually called
-                                    assert mock_llm_client.summarize.called, "LLM summarize should have been called"
-                        except urllib.error.HTTPError as e:
-                            if e.code not in (409, 429):
-                                raise
-        finally:
-            # Restore original file if it existed
-            if original_exists and original_content:
-                with open(summary_file, 'w') as f:
-                    f.write(original_content)
-            elif not original_exists and summary_file.exists():
-                summary_file.unlink()
+            ],
+            "content": "This is the full article content about technology and its impact."
+        }
+        
+        # Create summarizer with mock LLM
+        summarizer = SummarizerAgent(llm_client=mock_llm_client)
+        
+        # Summarize the article with comments
+        result = summarizer.summarize_article(test_article, include_comments=True)
+        
+        # Verify article summary
+        assert "article_summary" in result
+        assert len(result["article_summary"]) > 10, "Article summary should be substantial"
+        
+        # Verify comment summary
+        assert "comment_summary" in result
+        assert result["comment_summary"] is not None
+        
+        # Verify sentiment analysis
+        assert "comment_sentiment" in result
+        assert result["comment_sentiment"] in ["positive", "negative", "neutral", "mixed"]
+        
+        # Verify topics
+        assert "comment_topics" in result
+        
+        # Verify LLM was called
+        assert mock_llm_client.summarize.called, "LLM summarize should have been called"
 

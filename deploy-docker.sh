@@ -55,8 +55,9 @@ run_gcloud_ssh() {
             fi
             return $exit_code
         fi
-        # Failure is allowed, just return the exit code
-        return $exit_code
+        # Failure is allowed - return 0 so GitHub Actions doesn't mark it as failed
+        # The exit code is non-zero but we're treating it as informational
+        return 0
     fi
     return 0
 }
@@ -320,7 +321,8 @@ fi
 # FILE_CHECK already contains the output from the command
 
 # Load image and run container on VM
-echo "Loading Docker image and starting container on VM..."
+echo ""
+echo "=== Loading Image and Starting Container ==="
 run_gcloud_ssh "
     # Load the Docker image (use sudo in case user is not in docker group)
     if ! sudo docker load -i /tmp/${IMAGE_NAME}.tar; then
@@ -374,11 +376,11 @@ run_gcloud_ssh "
 echo ""
 echo "✅ Docker deployment completed successfully!"
 echo ""
-echo "Container status:"
-run_gcloud_ssh "sudo docker ps --filter name=$CONTAINER_NAME --format 'table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}'" "Checking container status" "true"
+echo "=== Container Status ==="
+run_gcloud_ssh "sudo docker ps --filter name=$CONTAINER_NAME --format 'table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}'" "Checking container status" "true" || true
 echo ""
-echo "Container logs (last 20 lines):"
-run_gcloud_ssh "sudo docker logs --tail 20 $CONTAINER_NAME 2>&1" "Viewing container logs" "true"
+echo "=== Container Logs (last 20 lines) ==="
+run_gcloud_ssh "sudo docker logs --tail 20 $CONTAINER_NAME 2>&1" "Viewing container logs" "true" || true
 echo ""
 echo "The app should be available at: https://hackernews.photogroup.network"
 echo ""
