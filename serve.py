@@ -232,22 +232,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     provider = os.environ.get('LLM_PROVIDER', 'auto')
                     
                     # Initialize components
+                    print(f"[REFRESH] Initializing LLM client with provider: {provider}", flush=True)
                     llm_client = get_llm_client(provider=provider)
+                    print(f"[REFRESH] LLM client initialized: {type(llm_client).__name__}", flush=True)
                     scraper = ScraperAgent()
                     filter_agent = FilterAgent(llm_client=llm_client)
                     summarizer = SummarizerAgent(llm_client=llm_client)
                     storage = Storage(output_dir="outputs")
                     
                     # Scrape articles
+                    print(f"[REFRESH] Scraping top {top_n} articles from Hacker News...", flush=True)
                     articles = scraper.scrape_articles_with_comments(top_n)
                     if not articles:
                         raise Exception("No articles found")
+                    print(f"[REFRESH] Scraped {len(articles)} articles", flush=True)
                     
                     # Classify articles (but don't filter)
+                    print(f"[REFRESH] Classifying articles...", flush=True)
                     articles = filter_agent.batch_classify(articles)
                     
-                    # Summarize articles
+                    # Summarize articles - THIS IS WHERE LLM CALLS HAPPEN
+                    print(f"[REFRESH] Summarizing articles with LLM (this may take a while)...", flush=True)
                     articles = summarizer.summarize_articles(articles, include_comments=True)
+                    print(f"[REFRESH] Summarization complete. Generated summaries for {len(articles)} articles.", flush=True)
                     
                     # Prepare metadata
                     metadata = {
@@ -275,9 +282,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     generate_index(PROJECT_ROOT)
                     
                 except Exception as e:
-                    print(f"Error during refresh: {e}", flush=True)
+                    print(f"[REFRESH ERROR] Error during refresh: {e}", flush=True)
                     import traceback
+                    print("[REFRESH ERROR] Full traceback:", flush=True)
                     traceback.print_exc()
+                    print("[REFRESH ERROR] Refresh failed. Check logs above for details.", flush=True)
                     # Don't raise - let finally block reset the flag
                 finally:
                     with refresh_lock:

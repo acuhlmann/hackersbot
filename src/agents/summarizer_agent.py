@@ -90,7 +90,10 @@ class SummarizerAgent:
         if len(summary_text) > max_chars:
             summary_text = summary_text[:max_chars] + "..."
         
-        return self.llm_client.summarize(summary_text, max_length=150)
+        logger.info("  Calling LLM to summarize article: %s", title[:50])
+        summary = self.llm_client.summarize(summary_text, max_length=150)
+        logger.info("  LLM summary generated (length: %d chars)", len(summary))
+        return summary
     
     def _summarize_individual_comments(self, comments: List[Dict]) -> List[Dict]:
         """
@@ -208,7 +211,9 @@ Comments:
 Concise summary of discussion topics:"""
         
         # Use the summarize method with max_length to keep it short like article summaries
+        logger.info("  Calling LLM to summarize %d comments...", len(valid_comments))
         summary = self.llm_client.summarize(comments_text, max_length=150)
+        logger.info("  LLM comment summary generated (length: %d chars)", len(summary))
         
         # Get sentiment analysis
         sentiment_result = self._analyze_comment_sentiment(comments_text)
@@ -252,7 +257,9 @@ Where:
 JSON:"""
         
         try:
+            logger.debug("  Calling LLM for sentiment analysis...")
             response = self.llm_client.get_filter_llm().invoke(prompt).strip()
+            logger.debug("  LLM sentiment response received")
             
             # Extract JSON if wrapped in markdown code blocks
             if "```json" in response:
@@ -340,7 +347,9 @@ Where:
 JSON:"""
         
         try:
+            logger.debug("  Calling LLM for agreement analysis...")
             response = self.llm_client.get_filter_llm().invoke(prompt).strip()
+            logger.debug("  LLM agreement response received")
             
             # Extract JSON if wrapped in markdown code blocks
             if "```json" in response:
