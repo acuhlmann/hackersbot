@@ -9,6 +9,11 @@ PROJECT=${PROJECT:-photogroup-215600}
 IMAGE_NAME=hackersbot
 CONTAINER_NAME=hackersbot-app
 
+# LLM configuration (can be set via environment variables)
+# If not set, will default to 'auto' which tries Ollama first, then Deepseek
+LLM_PROVIDER=${LLM_PROVIDER:-auto}
+DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+
 echo "Deploying HackersBot app to GCP VM using Docker..."
 echo "Project: $PROJECT"
 echo "Instance: $INSTANCE"
@@ -283,13 +288,24 @@ fi
 # Clean up local tar file
 rm -f "$TAR_FILE"
 
-# Build docker run command
+# Build docker run command with environment variables
 DOCKER_RUN_CMD="docker run -d \
     --name $CONTAINER_NAME \
     --restart unless-stopped \
     -p 127.0.0.1:18080:8000 \
     -e PORT=8000 \
+    -e BIND_ADDRESS=0.0.0.0 \
     -e PYTHONUNBUFFERED=1"
+
+# Add LLM provider environment variable if set
+if [ -n "$LLM_PROVIDER" ]; then
+    DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e LLM_PROVIDER=$LLM_PROVIDER"
+fi
+
+# Add Deepseek API key if set (for cloud LLM)
+if [ -n "$DEEPSEEK_API_KEY" ]; then
+    DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY"
+fi
 
 DOCKER_RUN_CMD="$DOCKER_RUN_CMD $IMAGE_NAME:latest"
 
@@ -320,12 +336,24 @@ run_gcloud_ssh "
     # Remove tar file after successful load
     rm -f /tmp/${IMAGE_NAME}.tar
     
+    # Stop and remove existing container if it exists
+    echo 'Stopping existing container (if any)...'
+    sudo docker stop $CONTAINER_NAME 2>/dev/null || true
+    sudo docker rm $CONTAINER_NAME 2>/dev/null || true
+    
     # Kill any processes on port 18080 in case they're running outside Docker
     sudo lsof -ti:18080 | xargs sudo kill -9 2>/dev/null || true
     
     # Run the new container
     # Bind to 127.0.0.1 so nginx can reach it (not exposed publicly)
-    sudo $DOCKER_RUN_CMD
+    echo 'Starting new container...'
+    if ! sudo $DOCKER_RUN_CMD; then
+        echo 'ERROR: Failed to start container'
+        exit 1
+    fi
+    
+    # Wait a moment for container to start
+    sleep 2
     
     # Verify container is running
     if ! sudo docker ps | grep -q $CONTAINER_NAME; then
@@ -333,6 +361,13 @@ run_gcloud_ssh "
         echo 'Container logs:'
         sudo docker logs $CONTAINER_NAME 2>&1 || true
         exit 1
+    fi
+    
+    # Check container health
+    echo 'Checking container health...'
+    sleep 3
+    if sudo docker inspect $CONTAINER_NAME --format='{{.State.Health.Status}}' 2>/dev/null | grep -q unhealthy; then
+        echo 'WARNING: Container is unhealthy. Check logs below.'
     fi
 " "Deploying Docker container" || exit 1
 

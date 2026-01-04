@@ -18,11 +18,15 @@ PROJECT_ROOT = Path(__file__).parent.resolve()
 # Change to the project root directory
 os.chdir(PROJECT_ROOT)
 
-# Generate the index first
+# Generate the index first (handle errors gracefully)
 print("Generating summary index...", flush=True)
-sys.path.insert(0, str(PROJECT_ROOT / "web"))
-from generate_index import generate_index
-generate_index(PROJECT_ROOT)
+try:
+    sys.path.insert(0, str(PROJECT_ROOT / "web"))
+    from generate_index import generate_index
+    generate_index(PROJECT_ROOT)
+except Exception as e:
+    print(f"Warning: Could not generate index: {e}", flush=True)
+    # Continue anyway - index will be generated on first refresh
 
 # Default port - can be overridden by PORT environment variable
 DEFAULT_PORT = 8000
