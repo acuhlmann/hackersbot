@@ -32,7 +32,8 @@ class Storage:
         self, 
         data: Dict[str, Any], 
         filename_prefix: str = "summary",
-        use_date_only: bool = False
+        use_date_only: bool = False,
+        add_generated_at: bool = True
     ) -> str:
         """
         Save data as JSON file.
@@ -41,6 +42,7 @@ class Storage:
             data: Data dictionary to save
             filename_prefix: Prefix for filename
             use_date_only: If True, use date-only filename (one per day, replaces existing)
+            add_generated_at: If True, add generated_at timestamp to the data
             
         Returns:
             Path to saved file
@@ -54,12 +56,13 @@ class Storage:
         
         filepath = self.output_dir / filename
         
-        # Add generated_at timestamp to the data
-        data_with_timestamp = data.copy()
-        data_with_timestamp["generated_at"] = datetime.now().isoformat()
+        # Add generated_at timestamp to the data if requested
+        data_to_save = data.copy()
+        if add_generated_at and "generated_at" not in data_to_save:
+            data_to_save["generated_at"] = datetime.now().isoformat()
         
         with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data_with_timestamp, f, indent=2, ensure_ascii=False)
+            json.dump(data_to_save, f, indent=2, ensure_ascii=False)
         
         return str(filepath)
     

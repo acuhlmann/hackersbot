@@ -55,7 +55,7 @@ class TestStorage:
     def test_save_json(self, storage, temp_output_dir):
         """Test saving JSON data"""
         data = {"test": "data", "number": 42}
-        filepath = storage.save_json(data)
+        filepath = storage.save_json(data, add_generated_at=False)
         
         assert os.path.exists(filepath)
         assert filepath.endswith(".json")
