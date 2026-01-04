@@ -55,7 +55,7 @@ EXPOSE 8000
 
 # Health check - uses 127.0.0.1 which works when BIND_ADDRESS=0.0.0.0 (listens on all interfaces)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${PORT}/web/')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${PORT}/')" || exit 1
 
 # Run the web server
 CMD ["python", "serve.py"]
