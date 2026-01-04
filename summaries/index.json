@@ -1,0 +1,44 @@
+[
+  {
+    "timestamp": "2026-01-04_08-12-28",
+    "jsonFile": "2026-01-04_08-12-28_summary.json",
+    "articlesCount": 5,
+    "aiArticlesCount": 2,
+    "generatedAt": null
+  },
+  {
+    "timestamp": "2026-01-03_08-11-48",
+    "jsonFile": "2026-01-03_08-11-48_summary.json",
+    "articlesCount": 5,
+    "aiArticlesCount": 2,
+    "generatedAt": null
+  },
+  {
+    "timestamp": "2026-01-02_08-12-42",
+    "jsonFile": "2026-01-02_08-12-42_summary.json",
+    "articlesCount": 5,
+    "aiArticlesCount": 0,
+    "generatedAt": null
+  },
+  {
+    "timestamp": "2026-01-01_08-12-52",
+    "jsonFile": "2026-01-01_08-12-52_summary.json",
+    "articlesCount": 5,
+    "aiArticlesCount": 1,
+    "generatedAt": null
+  },
+  {
+    "timestamp": "2026-01-01_07-18-46",
+    "jsonFile": "2026-01-01_07-18-46_summary.json",
+    "articlesCount": 3,
+    "aiArticlesCount": 1,
+    "generatedAt": null
+  },
+  {
+    "timestamp": "2026-01-01_07-05-21",
+    "jsonFile": "2026-01-01_07-05-21_summary.json",
+    "articlesCount": 5,
+    "aiArticlesCount": 1,
+    "generatedAt": null
+  }
+]

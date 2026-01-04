@@ -1,0 +1,66 @@
+name: Deploy to GCP VM
+
+on:
+  # Trigger deployment after test suite completes successfully
+  workflow_run:
+    workflows: ["Python application"]
+    types:
+      - completed
+    branches:
+      - main
+      - master
+  # Allow manual deployment trigger
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    # Only deploy if:
+    # 1. Tests passed (workflow_run) - must be on main/master branch, OR
+    # 2. Manual workflow dispatch
+    if: |
+      (github.event_name == 'workflow_run' && 
+       github.event.workflow_run.conclusion == 'success' &&
+       (github.event.workflow_run.head_branch == 'main' || 
+        github.event.workflow_run.head_branch == 'master')) ||
+      github.event_name == 'workflow_dispatch'
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Use the same commit that triggered the test workflow
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # For workflow_run: use the commit SHA from the test workflow
+          # For push/manual dispatch: use current commit SHA
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: photogroup-215600
+      
+      - name: Deploy application with Docker
+        run: |
+          chmod +x deploy-docker.sh
+          ./deploy-docker.sh
+        timeout-minutes: 15
+        env:
+          ZONE: asia-east2-a
+          INSTANCE: main
+          PROJECT: photogroup-215600
+      
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployment completed successfully!"
+          echo "Instance: main"
+          echo "Zone: asia-east2-a"
+          echo "Project: photogroup-215600"
+          echo "Deployment method: Docker"
+          echo "URL: https://hackernews.photogroup.network"
+

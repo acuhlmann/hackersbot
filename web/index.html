@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackerNews Summaries</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-orange: #f78166;
+            --accent-green: #7ee787;
+            --accent-blue: #58a6ff;
+            --accent-purple: #bc8cff;
+            --accent-yellow: #d29922;
+            --accent-cyan: #79c0ff;
+            --border-color: #30363d;
+            --shadow-glow: rgba(247, 129, 102, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Newsreader', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            background-image: 
+                radial-gradient(ellipse at 20% 0%, rgba(247, 129, 102, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(88, 166, 255, 0.06) 0%, transparent 50%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .logo {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-orange);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo h1::before {
+            content: '>';
+            color: var(--accent-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .logo p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .summary-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .summary-list h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-item {
+            display: block;
+            padding: 0.85rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .summary-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .summary-item.active {
+            background: var(--bg-tertiary);
+            border-left-color: var(--accent-orange);
+        }
+
+        .summary-item .date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .summary-item .meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--accent-cyan);
+            background: rgba(121, 192, 255, 0.12);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        /* Main content */
+        .main {
+            padding: 3rem 4rem;
+            max-width: 900px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            text-align: center;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Summary content */
+        .summary-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .summary-header .timestamp {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent-orange);
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .summary-meta {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+        }
+
+        .meta-item span {
+            color: var(--accent-green);
+        }
+
+        .generated-at {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Articles */
+        .article {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .article:hover {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 20px var(--shadow-glow);
+        }
+
+        .article-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .article-rank {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .article-ai-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--accent-cyan);
+            background: rgba(121, 192, 255, 0.15);
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .article h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .article h2 a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .article h2 a:hover {
+            color: var(--accent-orange);
+        }
+
+        .article-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .stat strong {
+            color: var(--accent-yellow);
+        }
+
+        .article-summary {
+            margin-bottom: 1.5rem;
+        }
+
+        .article-summary h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .article-summary p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .article-summary p.expanded {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .expand-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem 0;
+            margin-top: 0.25rem;
+            transition: opacity 0.2s ease;
+        }
+
+        .expand-btn:hover {
+            opacity: 0.7;
+        }
+
+        .comment-summary {
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-top: 1.5rem;
+        }
+
+        .comment-summary h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .comment-summary > p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .comment-summary > p.expanded {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        /* Agreement section - combined sentiment & consensus */
+        .agreement-section {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .agreement-section h4 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .agreement-badges {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .agreement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 4px;
+        }
+
+        .agreement-badge .label {
+            opacity: 0.7;
+        }
+
+        .agreement-badge .value {
+            font-weight: 600;
+        }
+
+        .agreement-agree {
+            background: rgba(126, 231, 135, 0.15);
+            color: var(--accent-green);
+        }
+
+        .agreement-disagree {
+            background: rgba(247, 129, 102, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .agreement-mixed, .agreement-neutral {
+            background: rgba(210, 153, 34, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .sentiment-positive {
+            background: rgba(126, 231, 135, 0.15);
+            color: var(--accent-green);
+        }
+
+        .sentiment-negative {
+            background: rgba(247, 129, 102, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .sentiment-mixed, .sentiment-neutral {
+            background: rgba(210, 153, 34, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .agreement-details {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-bottom: 0.75rem;
+        }
+
+        .key-points {
+            margin-top: 0.75rem;
+        }
+
+        .key-points ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .key-points li {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding-left: 1rem;
+            position: relative;
+            margin-bottom: 0.4rem;
+        }
+
+        .key-points li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-purple);
+        }
+
+        .topics {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .topic {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-purple);
+            background: rgba(188, 140, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+        }
+
+        .hn-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-orange);
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: opacity 0.2s ease;
+        }
+
+        .hn-link:hover {
+            opacity: 0.8;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: relative;
+                height: auto;
+                max-height: 40vh;
+            }
+
+            .main {
+                padding: 2rem 1.5rem;
+            }
+
+            .summary-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .article {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>hackersbot</h1>
+                <p>AI-powered HN summaries</p>
+            </div>
+            <div class="summary-list">
+                <h2>Historical Summaries</h2>
+                <div id="summaryList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <main class="main" id="mainContent">
+            <div class="empty-state">
+                <div class="icon">📰</div>
+                <h2>Select a summary</h2>
+                <p>Choose a date from the sidebar to view the HN summary</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Configuration - update this path based on your setup
+        const SUMMARIES_PATH = '../summaries';
+        
+        let summaries = [];
+        let currentSummary = null;
+
+        // Format date for display (handles both YYYY-MM-DD and YYYY-MM-DD_HH-MM-SS formats)
+        function formatDate(dateStr) {
+            // Try full timestamp format first
+            const fullParts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})/);
+            if (fullParts) {
+                const date = new Date(fullParts[1], fullParts[2] - 1, fullParts[3], fullParts[4], fullParts[5], fullParts[6]);
+                return date.toLocaleDateString('en-US', { 
+                    weekday: 'short',
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric'
+                });
+            }
+            
+            // Try date-only format (YYYY-MM-DD)
+            const dateParts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+            if (dateParts) {
+                const date = new Date(dateParts[1], dateParts[2] - 1, dateParts[3]);
+                return date.toLocaleDateString('en-US', { 
+                    weekday: 'short',
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric'
+                });
+            }
+            
+            return dateStr;
+        }
+
+        // Format ISO timestamp for display
+        function formatGeneratedAt(isoString) {
+            if (!isoString) return null;
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Get agreement class based on consensus
+        function getAgreementClass(consensus) {
+            if (!consensus) return 'agreement-mixed';
+            const lower = consensus.toLowerCase();
+            if (lower.includes('agree') && !lower.includes('disagree')) return 'agreement-agree';
+            if (lower.includes('disagree')) return 'agreement-disagree';
+            return 'agreement-mixed';
+        }
+
+        // Get sentiment class
+        function getSentimentClass(sentiment) {
+            if (!sentiment) return 'sentiment-mixed';
+            const lower = sentiment.toLowerCase();
+            if (lower.includes('positive')) return 'sentiment-positive';
+            if (lower.includes('negative')) return 'sentiment-negative';
+            return 'sentiment-mixed';
+        }
+
+        // Format consensus label
+        function formatConsensus(consensus) {
+            if (!consensus) return 'Mixed';
+            const lower = consensus.toLowerCase();
+            if (lower.includes('agree') && !lower.includes('disagree')) return '👍 Agree';
+            if (lower.includes('disagree')) return '👎 Disagree';
+            if (lower.includes('neutral')) return '😐 Neutral';
+            return '🤔 Mixed';
+        }
+
+        // Format sentiment label
+        function formatSentiment(sentiment) {
+            if (!sentiment) return 'Mixed';
+            const lower = sentiment.toLowerCase();
+            if (lower.includes('positive')) return '😊 Positive';
+            if (lower.includes('negative')) return '😞 Negative';
+            if (lower.includes('neutral')) return '😐 Neutral';
+            return '🤔 Mixed';
+        }
+
+        // Check if article is AI-related
+        function isAiRelated(article) {
+            const classification = article.ai_classification;
+            if (!classification) return false;
+            return classification.is_ai_related && (classification.confidence || 0) >= 0.5;
+        }
+
+        // Render summary list with AI indicator
+        function renderSummaryList() {
+            const listEl = document.getElementById('summaryList');
+            
+            if (summaries.length === 0) {
+                listEl.innerHTML = '<p style="padding: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">No summaries found</p>';
+                return;
+            }
+
+            listEl.innerHTML = summaries.map((s, index) => `
+                <div class="summary-item ${index === 0 ? 'active' : ''}" data-file="${s.jsonFile}" onclick="loadSummary('${s.jsonFile}', this)">
+                    <div class="date">${formatDate(s.timestamp)}</div>
+                    <div class="meta">
+                        <span>${s.articlesCount || '?'} articles</span>
+                        ${s.aiArticlesCount > 0 ? `<span class="ai-badge" title="${s.aiArticlesCount} articles about AI/ML">${s.aiArticlesCount} AI article${s.aiArticlesCount > 1 ? 's' : ''}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load and render a summary
+        async function loadSummary(filename, element) {
+            // Update active state
+            document.querySelectorAll('.summary-item').forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`${SUMMARIES_PATH}/${filename}`);
+                if (!response.ok) throw new Error('Failed to load summary');
+                
+                const data = await response.json();
+                currentSummary = data;
+                renderSummary(data, filename);
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <h2>Failed to load summary</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render the agreement section combining sentiment and consensus
+        function renderAgreementSection(article) {
+            const sentiment = article.comment_sentiment;
+            const sentimentDetails = article.comment_sentiment_details;
+            const agreement = article.comment_agreement;
+            
+            // If no agreement data at all, skip
+            if (!sentiment && !agreement) return '';
+            
+            const consensus = agreement?.consensus;
+            const agreementDetails = agreement?.details;
+            const keyPoints = agreement?.key_points || [];
+            
+            return `
+                <div class="agreement-section">
+                    <h4>Agreement with Article</h4>
+                    <div class="agreement-badges">
+                        ${consensus ? `
+                            <span class="agreement-badge ${getAgreementClass(consensus)}">
+                                <span class="label">Consensus:</span>
+                                <span class="value">${formatConsensus(consensus)}</span>
+                            </span>
+                        ` : ''}
+                        ${sentiment ? `
+                            <span class="agreement-badge ${getSentimentClass(sentiment)}">
+                                <span class="label">Sentiment:</span>
+                                <span class="value">${formatSentiment(sentiment)}</span>
+                            </span>
+                        ` : ''}
+                    </div>
+                    ${agreementDetails || sentimentDetails ? `
+                        <p class="agreement-details">${escapeHtml(agreementDetails || sentimentDetails)}</p>
+                    ` : ''}
+                    ${keyPoints.length > 0 ? `
+                        <div class="key-points">
+                            <ul>
+                                ${keyPoints.map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Render summary content
+        function renderSummary(data, filename) {
+            const mainContent = document.getElementById('mainContent');
+            const timestamp = filename.replace('_summary.json', '');
+            
+            // Count AI articles
+            const aiCount = data.articles.filter(isAiRelated).length;
+            
+            const articlesHtml = data.articles.map(article => {
+                const isAi = isAiRelated(article);
+                const topics = article.comment_topics || [];
+                
+                const articleId = `article-${article.rank}`;
+                return `
+                    <article class="article">
+                        <div class="article-header">
+                            <div class="article-rank">Article #${article.rank}</div>
+                            ${isAi ? '<span class="article-ai-tag">⚡ AI/ML Topic</span>' : ''}
+                        </div>
+                        <h2><a href="${article.url}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a></h2>
+                        <div class="article-stats">
+                            <span class="stat"><strong>${article.points}</strong> points</span>
+                            <span class="stat">by <strong>${escapeHtml(article.author)}</strong></span>
+                            <span class="stat"><strong>${article.comment_count}</strong> comments</span>
+                        </div>
+                        
+                        <div class="article-summary">
+                            <h3>Summary</h3>
+                            <p id="${articleId}-summary">${escapeHtml(article.article_summary || 'No summary available')}</p>
+                            <button class="expand-btn" onclick="toggleExpand('${articleId}-summary', this)">Show more</button>
+                        </div>
+                        
+                        ${article.comment_summary ? `
+                            <div class="comment-summary">
+                                <h3>Discussion Highlights</h3>
+                                <p id="${articleId}-discussion">${escapeHtml(article.comment_summary)}</p>
+                                <button class="expand-btn" onclick="toggleExpand('${articleId}-discussion', this)">Show more</button>
+                                
+                                ${renderAgreementSection(article)}
+                                
+                                ${topics.length > 0 ? `
+                                    <div class="topics">
+                                        ${topics.map(t => `<span class="topic">${escapeHtml(t)}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        <a href="${article.comment_url}" target="_blank" rel="noopener" class="hn-link">
+                            → View on Hacker News
+                        </a>
+                    </article>
+                `;
+            }).join('');
+
+            // Format the generated_at time if available
+            const generatedAt = data.generated_at ? formatGeneratedAt(data.generated_at) : null;
+            
+            mainContent.innerHTML = `
+                <header class="summary-header">
+                    <div class="timestamp">${formatDate(timestamp)}</div>
+                    <h1>HackerNews Summary</h1>
+                    <div class="summary-meta">
+                        <span class="meta-item">Articles: <span>${data.metadata.articles_count || data.articles.length}</span></span>
+                        <span class="meta-item">Provider: <span>${data.metadata.llm_provider || 'unknown'}</span></span>
+                        ${aiCount > 0 ? `<span class="meta-item">AI Articles: <span>${aiCount}</span></span>` : ''}
+                        ${data.metadata.filter_ai ? '<span class="meta-item">Filter: <span>AI only</span></span>' : ''}
+                    </div>
+                    ${generatedAt ? `<div class="generated-at">Last updated: ${generatedAt}</div>` : ''}
+                </header>
+                ${articlesHtml}
+            `;
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toggle expand/collapse for summary text
+        function toggleExpand(elementId, button) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const isExpanded = element.classList.contains('expanded');
+            element.classList.toggle('expanded');
+            button.textContent = isExpanded ? 'Show more' : 'Show less';
+        }
+
+        // Initialize: discover available summaries
+        async function init() {
+            try {
+                // Try to fetch the index file if it exists
+                const response = await fetch(`${SUMMARIES_PATH}/index.json`);
+                if (response.ok) {
+                    summaries = await response.json();
+                } else {
+                    // Fallback: try known files from the file listing
+                    summaries = await discoverSummaries();
+                }
+                
+                // Sort by timestamp descending (newest first)
+                summaries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+                
+                renderSummaryList();
+                
+                // Auto-load the most recent summary
+                if (summaries.length > 0) {
+                    loadSummary(summaries[0].jsonFile);
+                }
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+                document.getElementById('summaryList').innerHTML = `
+                    <p style="padding: 1.5rem; color: var(--accent-orange); font-size: 0.85rem;">
+                        Error loading summaries. Make sure to serve this page from a web server.
+                    </p>
+                `;
+            }
+        }
+
+        // Try to discover summaries by probing known filenames
+        async function discoverSummaries() {
+            // Known summary files based on the repository
+            const knownFiles = [
+                '2026-01-04_08-12-28_summary.json',
+                '2026-01-03_08-11-48_summary.json',
+                '2026-01-02_08-12-42_summary.json',
+                '2026-01-01_08-12-52_summary.json',
+                '2026-01-01_07-18-46_summary.json',
+                '2026-01-01_07-05-21_summary.json'
+            ];
+
+            const discovered = [];
+            
+            for (const file of knownFiles) {
+                try {
+                    const response = await fetch(`${SUMMARIES_PATH}/${file}`, { method: 'HEAD' });
+                    if (response.ok) {
+                        const timestamp = file.replace('_summary.json', '');
+                        discovered.push({
+                            timestamp,
+                            jsonFile: file,
+                            articlesCount: 5,
+                            aiArticlesCount: 0
+                        });
+                    }
+                } catch (e) {
+                    // File doesn't exist, skip
+                }
+            }
+
+            return discovered;
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>

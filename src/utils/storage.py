@@ -24,39 +24,69 @@ class Storage:
         """Get current timestamp in YYYY-MM-DD_HH-MM-SS format"""
         return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
-    def save_json(self, data: Dict[str, Any], filename_prefix: str = "summary") -> str:
+    def get_date_only(self) -> str:
+        """Get current date in YYYY-MM-DD format (for daily summaries)"""
+        return datetime.now().strftime("%Y-%m-%d")
+    
+    def save_json(
+        self, 
+        data: Dict[str, Any], 
+        filename_prefix: str = "summary",
+        use_date_only: bool = False
+    ) -> str:
         """
         Save data as JSON file.
         
         Args:
             data: Data dictionary to save
             filename_prefix: Prefix for filename
+            use_date_only: If True, use date-only filename (one per day, replaces existing)
             
         Returns:
             Path to saved file
         """
-        timestamp = self.get_timestamp()
-        filename = f"{timestamp}_{filename_prefix}.json"
+        if use_date_only:
+            date_str = self.get_date_only()
+            filename = f"{date_str}_{filename_prefix}.json"
+        else:
+            timestamp = self.get_timestamp()
+            filename = f"{timestamp}_{filename_prefix}.json"
+        
         filepath = self.output_dir / filename
         
+        # Add generated_at timestamp to the data
+        data_with_timestamp = data.copy()
+        data_with_timestamp["generated_at"] = datetime.now().isoformat()
+        
         with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+            json.dump(data_with_timestamp, f, indent=2, ensure_ascii=False)
         
         return str(filepath)
     
-    def save_markdown(self, content: str, filename_prefix: str = "summary") -> str:
+    def save_markdown(
+        self, 
+        content: str, 
+        filename_prefix: str = "summary",
+        use_date_only: bool = False
+    ) -> str:
         """
         Save content as Markdown file.
         
         Args:
             content: Markdown content string
             filename_prefix: Prefix for filename
+            use_date_only: If True, use date-only filename (one per day, replaces existing)
             
         Returns:
             Path to saved file
         """
-        timestamp = self.get_timestamp()
-        filename = f"{timestamp}_{filename_prefix}.md"
+        if use_date_only:
+            date_str = self.get_date_only()
+            filename = f"{date_str}_{filename_prefix}.md"
+        else:
+            timestamp = self.get_timestamp()
+            filename = f"{timestamp}_{filename_prefix}.md"
+        
         filepath = self.output_dir / filename
         
         with open(filepath, "w", encoding="utf-8") as f:

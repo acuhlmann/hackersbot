@@ -48,9 +48,9 @@ from src.models.llm_client import get_llm_client
 )
 @click.option(
     "--provider",
-    type=click.Choice(["ollama", "deepseek"], case_sensitive=False),
-    default="ollama",
-    help="LLM provider: ollama (local) or deepseek (cloud API). Default: ollama"
+    type=click.Choice(["auto", "ollama", "deepseek"], case_sensitive=False),
+    default="auto",
+    help="LLM provider: auto (detect best), ollama (local), or deepseek (cloud API). Default: auto"
 )
 def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float, no_comments: bool, provider: str):
     """
@@ -64,10 +64,10 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
     """
     click.echo("🚀 Starting HackerNews AI Summarizer...")
     click.echo(f"📊 Fetching top {top_n} articles...")
-    click.echo(f"🤖 Using LLM provider: {provider}")
     
-    # Initialize shared LLM client
+    # Initialize shared LLM client (auto-detects best provider if not specified)
     llm_client = get_llm_client(provider=provider)
+    click.echo(f"🤖 Using LLM provider: {llm_client.provider}")
     
     # Initialize agents with shared LLM client
     scraper = ScraperAgent()
@@ -121,14 +121,18 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
     if output_format in ["file", "both"]:
         click.echo("\n💾 Saving to files...")
         
+        # Use date-only filenames to keep one summary per day
+        # (running multiple times in a day will replace the previous summary)
+        use_date_only = True
+        
         # Save markdown
         md_content = Formatter.format_markdown(articles, metadata)
-        md_path = storage.save_markdown(md_content)
+        md_path = storage.save_markdown(md_content, use_date_only=use_date_only)
         click.echo(f"✅ Saved markdown: {md_path}")
         
         # Save JSON
         json_data = Formatter.format_json(articles, metadata)
-        json_path = storage.save_json(json_data)
+        json_path = storage.save_json(json_data, use_date_only=use_date_only)
         click.echo(f"✅ Saved JSON: {json_path}")
     
     click.echo("\n✨ Done!")

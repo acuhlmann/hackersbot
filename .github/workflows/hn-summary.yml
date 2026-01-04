@@ -1,9 +1,13 @@
 # Workflow to fetch and summarize Hacker News articles
-# Can be triggered manually, on schedule, or after PR merge
+# Runs daily at 11:55 PM UTC, or can be triggered manually
 
 name: HackerNews Summary
 
 on:
+  # Daily scheduled run at end of day (11:55 PM UTC)
+  schedule:
+    - cron: '55 23 * * *'
+  
   # Manual trigger with options
   workflow_dispatch:
     inputs:
@@ -22,22 +26,10 @@ on:
         default: false
         type: boolean
       save_to_repo:
-        description: 'Save summary to outputs/ folder'
+        description: 'Save summary to repository'
         required: false
-        default: false
+        default: true
         type: boolean
-
-  # Run daily at 8 AM UTC (adjust to your timezone)
-  schedule:
-    - cron: '0 8 * * *'
-
-  # Run after PR is merged to main
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'outputs/**'
-      - '*.md'
 
 permissions:
   contents: write  # Needed to commit summary files
@@ -64,13 +56,13 @@ jobs:
     - name: Determine run parameters
       id: params
       run: |
-        # Use inputs if manual trigger, otherwise defaults
+        # Use inputs if manual trigger, otherwise use defaults for scheduled runs
         if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-          echo "top_n=${{ github.event.inputs.top_n }}" >> $GITHUB_OUTPUT
-          echo "filter_ai=${{ github.event.inputs.filter_ai }}" >> $GITHUB_OUTPUT
-          echo "save_to_repo=${{ github.event.inputs.save_to_repo }}" >> $GITHUB_OUTPUT
+          echo "top_n=${{ github.event.inputs.top_n || '5' }}" >> $GITHUB_OUTPUT
+          echo "filter_ai=${{ github.event.inputs.filter_ai || 'false' }}" >> $GITHUB_OUTPUT
+          echo "save_to_repo=${{ github.event.inputs.save_to_repo || 'true' }}" >> $GITHUB_OUTPUT
         else
-          # Defaults for scheduled/push triggers
+          # Defaults for scheduled runs
           echo "top_n=5" >> $GITHUB_OUTPUT
           echo "filter_ai=false" >> $GITHUB_OUTPUT
           echo "save_to_repo=true" >> $GITHUB_OUTPUT
@@ -93,19 +85,25 @@ jobs:
         echo "Running: $CMD"
         $CMD
         
-        # Find the latest output files
-        LATEST_MD=$(ls -t outputs/*.md 2>/dev/null | head -1)
-        LATEST_JSON=$(ls -t outputs/*.json 2>/dev/null | head -1)
+        # Get today's date for filename
+        TODAY=$(date -u '+%Y-%m-%d')
+        
+        # Find today's output files (date-only filename format)
+        LATEST_MD=$(ls outputs/${TODAY}_summary.md 2>/dev/null || ls -t outputs/*.md 2>/dev/null | head -1)
+        LATEST_JSON=$(ls outputs/${TODAY}_summary.json 2>/dev/null || ls -t outputs/*.json 2>/dev/null | head -1)
         
         echo "latest_md=$LATEST_MD" >> $GITHUB_OUTPUT
         echo "latest_json=$LATEST_JSON" >> $GITHUB_OUTPUT
+        echo "today=$TODAY" >> $GITHUB_OUTPUT
         
         # Copy to summaries/ directory for git tracking (outputs/ is gitignored)
+        # This will replace any existing summary for today
         mkdir -p summaries
-        if [ -n "$LATEST_MD" ]; then
+        if [ -n "$LATEST_MD" ] && [ -f "$LATEST_MD" ]; then
+          # Extract just the filename and copy to summaries
           cp "$LATEST_MD" summaries/
         fi
-        if [ -n "$LATEST_JSON" ]; then
+        if [ -n "$LATEST_JSON" ] && [ -f "$LATEST_JSON" ]; then
           cp "$LATEST_JSON" summaries/
         fi
 

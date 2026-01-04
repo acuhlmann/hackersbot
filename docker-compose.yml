@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  hackersbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hackersbot-app
+    ports:
+      - "127.0.0.1:${PORT:-18080}:8000"
+    environment:
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount summaries for live updates during development
+      - ./summaries:/app/summaries:ro
+      # Mount web assets for live development
+      - ./web:/app/web:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/web/')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - hackersbot-network
+
+networks:
+  hackersbot-network:
+    driver: bridge
+

@@ -2,7 +2,10 @@
 
 import os
 import logging
-from typing import Optional, Dict, Any, Literal
+import urllib.request
+import urllib.error
+import json
+from typing import Optional, Dict, Any, Literal, List
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,7 +13,61 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Type for provider selection
-LLMProvider = Literal["ollama", "deepseek"]
+LLMProvider = Literal["ollama", "deepseek", "auto"]
+
+
+def check_ollama_available(base_url: str = "http://localhost:11434") -> tuple[bool, List[str]]:
+    """
+    Check if Ollama is running and has models available.
+    
+    Args:
+        base_url: Ollama API base URL
+        
+    Returns:
+        Tuple of (is_available, list_of_models)
+    """
+    try:
+        # Check if Ollama API is responding
+        req = urllib.request.Request(f"{base_url}/api/tags", method="GET")
+        req.add_header("Content-Type", "application/json")
+        
+        with urllib.request.urlopen(req, timeout=3) as response:
+            data = json.loads(response.read().decode())
+            models = [m.get("name", "") for m in data.get("models", [])]
+            return len(models) > 0, models
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, Exception) as e:
+        logger.debug(f"Ollama not available: {e}")
+        return False, []
+
+
+def detect_best_provider() -> LLMProvider:
+    """
+    Auto-detect the best available LLM provider.
+    
+    Priority:
+    1. If OLLAMA is available locally with models, use it
+    2. If DEEPSEEK_API_KEY is set, use deepseek
+    3. Fall back to ollama (will error if not available)
+    
+    Returns:
+        The recommended provider name
+    """
+    # Check for Ollama first (local is preferred)
+    ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    ollama_available, models = check_ollama_available(ollama_url)
+    
+    if ollama_available:
+        logger.info(f"Ollama detected with {len(models)} model(s): {', '.join(models[:3])}{'...' if len(models) > 3 else ''}")
+        return "ollama"
+    
+    # Check for Deepseek API key
+    if os.getenv("DEEPSEEK_API_KEY"):
+        logger.info("Using Deepseek API (DEEPSEEK_API_KEY found)")
+        return "deepseek"
+    
+    # Default to ollama (will show error when used if not available)
+    logger.warning("No LLM provider detected. Defaulting to ollama.")
+    return "ollama"
 
 
 class LLMClient:
@@ -29,11 +86,19 @@ class LLMClient:
         Initialize LLM client with specified provider.
         
         Args:
-            provider: LLM provider ('ollama' or 'deepseek'). 
-                     Default: from LLM_PROVIDER env var, or 'ollama'
+            provider: LLM provider ('ollama', 'deepseek', or 'auto'). 
+                     Default: 'auto' (auto-detect best available provider)
             **kwargs: Additional arguments passed to the underlying client
         """
-        self.provider = provider or os.getenv("LLM_PROVIDER", "ollama")
+        # Get provider from argument, env var, or auto-detect
+        requested_provider = provider or os.getenv("LLM_PROVIDER", "auto")
+        
+        # Auto-detect if requested
+        if requested_provider == "auto":
+            self.provider = detect_best_provider()
+        else:
+            self.provider = requested_provider
+        
         self._client = None
         self._kwargs = kwargs
         
