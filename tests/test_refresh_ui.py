@@ -36,9 +36,20 @@ except ImportError:
 @pytest.fixture(scope="class")
 def test_server():
     """Start a test server in a separate thread."""
-    port = 9999
-    httpd = socketserver.TCPServer(("127.0.0.1", port), Handler)
-    httpd.allow_reuse_address = True
+    # Try to find an available port
+    import socket
+    port = None
+    for test_port in range(9999, 10099):
+        try:
+            httpd = socketserver.TCPServer(("127.0.0.1", test_port), Handler)
+            httpd.allow_reuse_address = True
+            port = test_port
+            break
+        except OSError:
+            continue
+    
+    if port is None:
+        pytest.fail("Could not find an available port for test server")
     
     # Start server in a thread
     server_thread = threading.Thread(target=httpd.serve_forever)
@@ -71,9 +82,29 @@ def browser():
 def page(browser, test_server):
     """Create a new page for each test."""
     page = browser.new_page()
+    
+    # Mock status endpoint to return a default state before page loads
+    def handle_status(route):
+        if '/api/status' in route.request.url:
+            route.fulfill(
+                status=200,
+                content_type='application/json',
+                body=json.dumps({
+                    "in_progress": False,
+                    "can_refresh": True,
+                    "last_refresh": None
+                })
+            )
+        else:
+            route.continue_()
+    
+    page.route('**/api/status', handle_status)
+    
     page.goto(test_server)
     # Wait for page to load
     page.wait_for_selector('#refreshButton', timeout=5000)
+    # Wait a bit for initial status check to complete
+    time.sleep(0.5)
     yield page
     page.close()
 
@@ -303,18 +334,35 @@ class TestRefreshUI:
     
     def test_refresh_button_disabled_during_refresh(self, page, test_server):
         """Test that refresh button is disabled while refresh is in progress."""
-        # Mock status to always show in progress
+        # Track status calls to change behavior after refresh is triggered
+        status_call_count = {"count": 0}
+        refresh_triggered = {"triggered": False}
+        
         def handle_status(route):
             if '/api/status' in route.request.url:
-                route.fulfill(
-                    status=200,
-                    content_type='application/json',
-                    body=json.dumps({
-                        "in_progress": True,
-                        "can_refresh": False,
-                        "last_refresh": None
-                    })
-                )
+                status_call_count["count"] += 1
+                # Before refresh: allow refresh
+                # After refresh triggered: show in progress
+                if refresh_triggered["triggered"] or status_call_count["count"] > 2:
+                    route.fulfill(
+                        status=200,
+                        content_type='application/json',
+                        body=json.dumps({
+                            "in_progress": True,
+                            "can_refresh": False,
+                            "last_refresh": None
+                        })
+                    )
+                else:
+                    route.fulfill(
+                        status=200,
+                        content_type='application/json',
+                        body=json.dumps({
+                            "in_progress": False,
+                            "can_refresh": True,
+                            "last_refresh": None
+                        })
+                    )
             else:
                 route.continue_()
         
@@ -323,6 +371,7 @@ class TestRefreshUI:
         # Mock refresh endpoint
         def handle_refresh(route):
             if '/api/refresh' in route.request.url:
+                refresh_triggered["triggered"] = True
                 route.fulfill(
                     status=200,
                     content_type='application/json',
@@ -333,26 +382,21 @@ class TestRefreshUI:
         
         page.route('**/api/refresh', handle_refresh)
         
-        # Reload to get status
+        # Reload to get fresh state
         page.reload()
         page.wait_for_selector('#refreshButton', timeout=5000)
+        time.sleep(0.5)  # Wait for initial status check
         
-        # Wait for status check to run
-        time.sleep(1)
-        
-        # Check that button is disabled
+        # Button should be enabled initially
         refresh_button = page.locator('#refreshButton')
-        # The button should be disabled when in_progress is true
-        # Note: This depends on the status check running, which happens every 5 seconds
-        # So we might need to wait a bit
-        time.sleep(1)
+        assert refresh_button.is_enabled(), "Button should be enabled before refresh"
         
-        # After clicking, button should be disabled
+        # Click the refresh button
         refresh_button.click()
-        time.sleep(0.5)
+        time.sleep(0.5)  # Wait for button state to update
         
         # Button should be disabled after click
-        assert not refresh_button.is_enabled()
+        assert not refresh_button.is_enabled(), "Button should be disabled after starting refresh"
     
     def test_refresh_error_handling(self, page, test_server):
         """Test that refresh errors are displayed correctly."""
@@ -376,15 +420,29 @@ class TestRefreshUI:
         refresh_button = page.locator('#refreshButton')
         refresh_button.click()
         
-        # Wait for error message
+        # Wait for error message - the JavaScript needs time to process the error response
         refresh_status = page.locator('#refreshStatus')
         refresh_status.wait_for(state='visible', timeout=2000)
         
+        # Wait for the error message to appear (JavaScript processes async)
+        max_wait = 5
+        start_time = time.time()
+        error_found = False
+        while time.time() - start_time < max_wait:
+            status_text = refresh_status.text_content()
+            status_class = refresh_status.get_attribute('class') or ''
+            if 'Rate limit' in status_text or 'error' in status_text.lower() or 'Failed' in status_text or 'error' in status_class:
+                error_found = True
+                break
+            time.sleep(0.2)
+        
         # Check for error message
         status_text = refresh_status.text_content()
-        assert 'Rate limit' in status_text or 'error' in status_text.lower() or 'Failed' in status_text
+        status_class = refresh_status.get_attribute('class') or ''
+        
+        assert error_found or 'Rate limit' in status_text or 'error' in status_text.lower() or 'Failed' in status_text or 'error' in status_class, \
+            f"Expected error message but got: '{status_text}' with class '{status_class}'"
         
         # Check that status has error class
-        status_class = refresh_status.get_attribute('class') or ''
-        assert 'error' in status_class
+        assert 'error' in status_class, f"Status should have 'error' class but got: '{status_class}'"
 
