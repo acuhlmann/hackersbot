@@ -146,4 +146,30 @@ class Storage:
         metadata["generated"] = data.get("timestamp", "")
         
         return Formatter.format_markdown(data.get("articles", []), metadata)
+    
+    def copy_to_summaries(self, source_path: str, summaries_dir: str = "summaries") -> str:
+        """
+        Copy a file from outputs/ to summaries/ directory.
+        
+        Args:
+            source_path: Path to the source file (can be relative or absolute)
+            summaries_dir: Target directory name (default: "summaries")
+            
+        Returns:
+            Path to the copied file in summaries directory
+        """
+        source = Path(source_path)
+        if not source.is_absolute():
+            # If relative, assume it's relative to project root
+            source = Path.cwd() / source_path
+        
+        summaries_path = Path.cwd() / summaries_dir
+        summaries_path.mkdir(exist_ok=True)
+        
+        # Copy the file
+        dest_path = summaries_path / source.name
+        import shutil
+        shutil.copy2(source, dest_path)
+        
+        return str(dest_path)
 

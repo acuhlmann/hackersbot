@@ -96,6 +96,72 @@
             margin-top: 0.3rem;
         }
 
+        .refresh-section {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .refresh-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .refresh-button:hover:not(:disabled) {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+            color: var(--bg-primary);
+        }
+
+        .refresh-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .refresh-button.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .refresh-button.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--accent-orange);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .refresh-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .refresh-status.error {
+            color: var(--accent-orange);
+        }
+
+        .refresh-status.success {
+            color: var(--accent-green);
+        }
+
         .summary-list {
             flex: 1;
             overflow-y: auto;
@@ -145,6 +211,13 @@
             font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 0.2rem;
+        }
+
+        .summary-item .refresh-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-style: italic;
         }
 
         .ai-badge {
@@ -603,6 +676,12 @@
                 <h1>hackersbot</h1>
                 <p>AI-powered HN summaries</p>
             </div>
+            <div class="refresh-section">
+                <button id="refreshButton" class="refresh-button" onclick="triggerRefresh()">
+                    🔄 Refresh Summary
+                </button>
+                <div id="refreshStatus" class="refresh-status"></div>
+            </div>
             <div class="summary-list">
                 <h2>Historical Summaries</h2>
                 <div id="summaryList">
@@ -657,7 +736,7 @@
             return dateStr;
         }
 
-        // Format ISO timestamp for display
+        // Format ISO timestamp for display (local time)
         function formatGeneratedAt(isoString) {
             if (!isoString) return null;
             try {
@@ -666,6 +745,21 @@
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                });
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Format ISO timestamp for short display (time only)
+        function formatRefreshTime(isoString) {
+            if (!isoString) return null;
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit'
                 });
@@ -719,7 +813,7 @@
             return classification.is_ai_related && (classification.confidence || 0) >= 0.5;
         }
 
-        // Render summary list with AI indicator
+        // Render summary list with AI indicator and refresh times
         function renderSummaryList() {
             const listEl = document.getElementById('summaryList');
             
@@ -728,15 +822,19 @@
                 return;
             }
 
-            listEl.innerHTML = summaries.map((s, index) => `
+            listEl.innerHTML = summaries.map((s, index) => {
+                const refreshTime = s.generatedAt ? formatRefreshTime(s.generatedAt) : null;
+                return `
                 <div class="summary-item ${index === 0 ? 'active' : ''}" data-file="${s.jsonFile}" onclick="loadSummary('${s.jsonFile}', this)">
                     <div class="date">${formatDate(s.timestamp)}</div>
                     <div class="meta">
                         <span>${s.articlesCount || '?'} articles</span>
                         ${s.aiArticlesCount > 0 ? `<span class="ai-badge" title="${s.aiArticlesCount} articles about AI/ML">${s.aiArticlesCount} AI article${s.aiArticlesCount > 1 ? 's' : ''}</span>` : ''}
                     </div>
+                    ${refreshTime ? `<div class="refresh-time">Refreshed at ${refreshTime}</div>` : ''}
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // Load and render a summary
@@ -967,8 +1065,121 @@
             return discovered;
         }
 
+        // Refresh functionality
+        let refreshStatusCheckInterval = null;
+
+        async function checkRefreshStatus() {
+            try {
+                const response = await fetch('/api/status');
+                if (!response.ok) return;
+                
+                const status = await response.json();
+                const button = document.getElementById('refreshButton');
+                const statusEl = document.getElementById('refreshStatus');
+                
+                if (status.in_progress) {
+                    button.disabled = true;
+                    button.classList.add('loading');
+                    statusEl.textContent = 'Refreshing...';
+                    statusEl.className = 'refresh-status';
+                } else {
+                    button.disabled = !status.can_refresh;
+                    button.classList.remove('loading');
+                    
+                    if (status.last_refresh) {
+                        const refreshTime = formatGeneratedAt(status.last_refresh);
+                        statusEl.textContent = `Last refresh: ${refreshTime}`;
+                        statusEl.className = 'refresh-status';
+                    } else {
+                        statusEl.textContent = 'No refresh yet';
+                        statusEl.className = 'refresh-status';
+                    }
+                    
+                    if (!status.can_refresh && status.rate_limit_message) {
+                        statusEl.textContent = status.rate_limit_message;
+                        statusEl.className = 'refresh-status error';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to check refresh status:', error);
+            }
+        }
+
+        async function triggerRefresh() {
+            const button = document.getElementById('refreshButton');
+            const statusEl = document.getElementById('refreshStatus');
+            
+            button.disabled = true;
+            button.classList.add('loading');
+            statusEl.textContent = 'Starting refresh...';
+            statusEl.className = 'refresh-status';
+            
+            try {
+                const response = await fetch('/api/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    statusEl.textContent = 'Refresh started! This may take a few minutes...';
+                    statusEl.className = 'refresh-status success';
+                    
+                    // Start polling for status
+                    if (refreshStatusCheckInterval) {
+                        clearInterval(refreshStatusCheckInterval);
+                    }
+                    refreshStatusCheckInterval = setInterval(async () => {
+                        await checkRefreshStatus();
+                        const statusResponse = await fetch('/api/status');
+                        if (statusResponse.ok) {
+                            const status = await statusResponse.json();
+                            if (!status.in_progress) {
+                                // Refresh complete, reload summaries
+                                clearInterval(refreshStatusCheckInterval);
+                                refreshStatusCheckInterval = null;
+                                await init();
+                                // Reload current summary if it's today's
+                                if (currentSummary) {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    const currentDate = currentSummary.generated_at ? 
+                                        new Date(currentSummary.generated_at).toISOString().split('T')[0] : null;
+                                    if (currentDate === today) {
+                                        const todayFile = summaries.find(s => {
+                                            const fileDate = s.timestamp.split('_')[0];
+                                            return fileDate === today;
+                                        });
+                                        if (todayFile) {
+                                            loadSummary(todayFile.jsonFile);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }, 2000); // Check every 2 seconds
+                } else {
+                    statusEl.textContent = data.error || 'Failed to start refresh';
+                    statusEl.className = 'refresh-status error';
+                    button.disabled = false;
+                    button.classList.remove('loading');
+                }
+            } catch (error) {
+                statusEl.textContent = `Error: ${error.message}`;
+                statusEl.className = 'refresh-status error';
+                button.disabled = false;
+                button.classList.remove('loading');
+            }
+        }
+
         // Start the app
         init();
+        
+        // Check refresh status on load and periodically
+        checkRefreshStatus();
+        setInterval(checkRefreshStatus, 5000); // Check every 5 seconds
     </script>
 </body>
 </html>
