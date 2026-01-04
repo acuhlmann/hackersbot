@@ -170,8 +170,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     
     def handle_status(self):
         """Handle GET /api/status - return refresh status and last refresh time."""
-        global refresh_in_progress
-        
+        # Note: We read refresh_in_progress but don't modify it, so no global needed
         today_summary = self.get_today_summary()
         status_data = {
             "in_progress": refresh_in_progress,

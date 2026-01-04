@@ -114,4 +114,48 @@ class TestWebServer:
             urllib.request.urlopen(req, timeout=5)
         # Should return 403 Forbidden or 404 Not Found
         assert exc_info.value.code in (403, 404)
+    
+    def test_api_status_endpoint(self, server):
+        """Test that /api/status endpoint works."""
+        url = f"{server}/api/status"
+        req = urllib.request.Request(url)
+        
+        with urllib.request.urlopen(req, timeout=5) as response:
+            assert response.getcode() == 200
+            assert 'application/json' in response.headers.get('Content-Type', '')
+            content = response.read().decode('utf-8')
+            data = json.loads(content)
+            assert 'in_progress' in data
+            assert 'can_refresh' in data
+            assert 'last_refresh' in data
+            assert isinstance(data['in_progress'], bool)
+            assert isinstance(data['can_refresh'], bool)
+    
+    def test_api_refresh_endpoint_exists(self, server):
+        """Test that /api/refresh endpoint exists and handles requests."""
+        url = f"{server}/api/refresh"
+        req = urllib.request.Request(url, method='POST')
+        req.add_header('Content-Type', 'application/json')
+        
+        # This might return 200 (refresh started) or 429 (rate limited)
+        # or 409 (already in progress), all are valid responses
+        try:
+            with urllib.request.urlopen(req, timeout=5) as response:
+                assert response.getcode() in (200, 409, 429)
+                assert 'application/json' in response.headers.get('Content-Type', '')
+                content = response.read().decode('utf-8')
+                data = json.loads(content)
+                assert 'success' in data or 'error' in data
+        except urllib.error.HTTPError as e:
+            # Rate limit or conflict are acceptable
+            assert e.code in (409, 429)
+    
+    def test_api_invalid_endpoint_returns_404(self, server):
+        """Test that invalid API endpoints return 404."""
+        url = f"{server}/api/invalid"
+        req = urllib.request.Request(url)
+        
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(req, timeout=5)
+        assert exc_info.value.code == 404
 

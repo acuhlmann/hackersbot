@@ -189,6 +189,65 @@ python -m src.telegram_bot --provider ollama
 | `/ai 20` | Scan top 20 for AI articles |
 | `/help` | Show help message |
 
+## 🌐 Web UI
+
+A beautiful web interface to browse and view HackerNews summaries with manual refresh capability.
+
+### Running the Web Server Locally
+
+1. **Make sure dependencies are installed:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Start the web server:**
+   ```bash
+   python serve.py
+   ```
+   
+   Or specify a custom port:
+   ```bash
+   python serve.py 8080
+   ```
+
+3. **Open your browser:**
+   - Default URL: http://localhost:8000
+   - Or use the port you specified
+
+### Web UI Features
+
+- **Browse historical summaries** - View all past summaries in the sidebar
+- **Manual refresh** - Click the "🔄 Refresh Summary" button to generate a new summary
+- **Rate limiting** - Prevents refreshing more than once per hour
+- **Local time display** - All refresh times shown in your local timezone
+- **Real-time status** - See when the last refresh occurred and current refresh status
+
+### Environment Variables
+
+You can configure the server with environment variables:
+
+```bash
+# Set custom port (default: 8000)
+export PORT=8080
+
+# Set bind address (default: 0.0.0.0 for Docker, localhost for local)
+export BIND_ADDRESS=localhost
+
+# Set LLM provider for refresh functionality
+export LLM_PROVIDER=deepseek
+export DEEPSEEK_API_KEY=your-api-key-here
+```
+
+### Docker
+
+You can also run the web server in Docker:
+
+```bash
+docker-compose up
+```
+
+This will start the web server on port 8000.
+
 ## 🔄 GitHub Actions (No Server Needed!)
 
 You can run the summarizer directly from GitHub without any server!
