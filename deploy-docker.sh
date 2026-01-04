@@ -55,6 +55,16 @@ else
     echo "Docker is already installed."
 fi
 
+# Check disk space on VM
+echo "Checking disk space on VM..."
+run_gcloud_ssh "
+    echo 'Current disk usage:'
+    df -h /
+    echo ''
+    echo 'Docker disk usage:'
+    sudo docker system df 2>/dev/null || echo 'Unable to check Docker disk usage'
+" "Checking disk space" || true
+
 # Build Docker image locally
 echo "Building Docker image locally..."
 if ! docker build -t $IMAGE_NAME:latest .; then
@@ -74,7 +84,24 @@ fi
 
 # Upload Docker image to VM
 echo "Uploading Docker image to VM (this may take a few minutes)..."
-gcloud compute scp --compress "$TAR_FILE" $INSTANCE:/tmp/ --project $PROJECT --zone $ZONE 2>&1 | grep -v "^Updating project ssh metadata\.\.\." | grep -v "^Updating instance ssh metadata\.\.\." | grep -v "^\.$" | grep -v "^done\.$" || true
+if ! gcloud compute scp --compress "$TAR_FILE" $INSTANCE:/tmp/ --project $PROJECT --zone $ZONE 2>&1 | grep -v "^Updating project ssh metadata\.\.\." | grep -v "^Updating instance ssh metadata\.\.\." | grep -v "^\.$" | grep -v "^done\.$"; then
+    echo "ERROR: Failed to upload Docker image to VM"
+    echo "This is likely due to disk space issues on the VM"
+    echo "Attempting to clean up space on VM..."
+    run_gcloud_ssh "
+        echo 'Disk space before cleanup:'
+        df -h / | tail -1
+        sudo docker system prune -af || true
+        sudo rm -f /tmp/*.tar 2>/dev/null || true
+        echo 'Disk space after cleanup:'
+        df -h / | tail -1
+    " "Cleaning up disk space" || true
+    echo "Retrying upload..."
+    if ! gcloud compute scp --compress "$TAR_FILE" $INSTANCE:/tmp/ --project $PROJECT --zone $ZONE 2>&1 | grep -v "^Updating project ssh metadata\.\.\." | grep -v "^Updating instance ssh metadata\.\.\." | grep -v "^\.$" | grep -v "^done\.$"; then
+        echo "ERROR: Upload failed after cleanup attempt"
+        exit 1
+    fi
+fi
 
 # Clean up local tar file
 rm -f "$TAR_FILE"
@@ -89,26 +116,70 @@ DOCKER_RUN_CMD="docker run -d \
 
 DOCKER_RUN_CMD="$DOCKER_RUN_CMD $IMAGE_NAME:latest"
 
+# Clean up disk space and old Docker resources on VM before deployment
+echo "Cleaning up old Docker resources on VM..."
+run_gcloud_ssh "
+    # Stop and remove existing container if it exists
+    sudo docker stop $CONTAINER_NAME 2>/dev/null || true
+    sudo docker rm $CONTAINER_NAME 2>/dev/null || true
+    
+    # Remove old/unused Docker images to free up space
+    sudo docker image prune -af --filter 'until=24h' || true
+    
+    # Remove old/unused containers
+    sudo docker container prune -f || true
+    
+    # Remove old/unused volumes (be careful with this)
+    sudo docker volume prune -f || true
+    
+    # Clean up old tar files
+    sudo rm -f /tmp/${IMAGE_NAME}.tar /tmp/*.tar 2>/dev/null || true
+    
+    # Show disk space
+    echo 'Disk space before deployment:'
+    df -h / | tail -1
+" "Cleaning up old Docker resources" || true
+
+# Check if tar file was uploaded successfully
+echo "Verifying Docker image was uploaded to VM..."
+if ! run_gcloud_ssh "test -f /tmp/${IMAGE_NAME}.tar" "Checking if tar file exists"; then
+    echo "ERROR: Docker image tar file was not uploaded successfully"
+    echo "This is likely due to disk space issues on the VM"
+    echo "Please check disk space and try again"
+    exit 1
+fi
+
 # Load image and run container on VM
 echo "Loading Docker image and starting container on VM..."
 run_gcloud_ssh "
     # Load the Docker image (use sudo in case user is not in docker group)
-    sudo docker load -i /tmp/${IMAGE_NAME}.tar
+    if ! sudo docker load -i /tmp/${IMAGE_NAME}.tar; then
+        echo 'ERROR: Failed to load Docker image - likely disk space issue'
+        echo 'Current disk space:'
+        df -h /
+        echo 'Cleaning up more space...'
+        sudo docker system prune -af || true
+        # Try loading again
+        sudo docker load -i /tmp/${IMAGE_NAME}.tar || exit 1
+    fi
+    
+    # Remove tar file after successful load
     rm -f /tmp/${IMAGE_NAME}.tar
     
     # Kill any processes on port 18080 in case they're running outside Docker
     sudo lsof -ti:18080 | xargs sudo kill -9 2>/dev/null || true
-    
-    # Stop and remove existing container if it exists
-    sudo docker stop $CONTAINER_NAME 2>/dev/null || true
-    sudo docker rm $CONTAINER_NAME 2>/dev/null || true
     
     # Run the new container
     # Bind to 127.0.0.1 so nginx can reach it (not exposed publicly)
     sudo $DOCKER_RUN_CMD
     
     # Verify container is running
-    sudo docker ps | grep $CONTAINER_NAME
+    if ! sudo docker ps | grep -q $CONTAINER_NAME; then
+        echo 'ERROR: Container failed to start'
+        echo 'Container logs:'
+        sudo docker logs $CONTAINER_NAME 2>&1 || true
+        exit 1
+    fi
 " "Deploying Docker container" || exit 1
 
 echo ""
