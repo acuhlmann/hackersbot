@@ -92,202 +92,71 @@ if ! docker build -t $IMAGE_NAME:latest .; then
     exit 1
 fi
 
-# Save Docker image to tar file
-echo "Saving Docker image to tar file..."
-TAR_FILE="/tmp/${IMAGE_NAME}.tar"
-docker save $IMAGE_NAME:latest -o "$TAR_FILE"
+# Check VM disk space BEFORE load (informational; streaming upload avoids VM /tmp tarball)
+echo "Checking VM disk space before image load..."
+run_gcloud_ssh "
+    echo 'Current disk usage:'
+    df -h /
+    echo ''
+    echo 'Docker disk usage:'
+    sudo docker system df 2>/dev/null || echo 'Unable to check Docker disk usage'
+" "Checking VM disk space" || true
 
-if [ ! -f "$TAR_FILE" ]; then
-    echo "ERROR: Failed to save Docker image"
-    exit 1
-fi
-
-# Check tar file size (in bytes and human-readable)
-TAR_SIZE_BYTES=$(stat -f%z "$TAR_FILE" 2>/dev/null || stat -c%s "$TAR_FILE" 2>/dev/null || du -b "$TAR_FILE" | cut -f1)
-TAR_SIZE_MB=$((TAR_SIZE_BYTES / 1024 / 1024))
-TAR_SIZE=$(du -h "$TAR_FILE" | cut -f1)
-echo "Docker image tar file size: $TAR_SIZE ($TAR_SIZE_MB MB)"
-
-# Check VM disk space BEFORE upload
-echo "Checking VM disk space before upload..."
-VM_SPACE_INFO=$(run_gcloud_ssh "
-    # Get available space in /tmp (in MB)
-    AVAIL_TMP=\$(df -m /tmp | tail -1 | awk '{print \$4}')
-    AVAIL_ROOT=\$(df -m / | tail -1 | awk '{print \$4}')
-    USED_ROOT=\$(df -m / | tail -1 | awk '{print \$3}')
-    TOTAL_ROOT=\$(df -m / | tail -1 | awk '{print \$2}')
-    PERCENT_ROOT=\$(df / | tail -1 | awk '{print \$5}' | sed 's/%//')
-    
-    echo \"TMP_AVAIL_MB=\$AVAIL_TMP\"
-    echo \"ROOT_AVAIL_MB=\$AVAIL_ROOT\"
-    echo \"ROOT_USED_MB=\$USED_ROOT\"
-    echo \"ROOT_TOTAL_MB=\$TOTAL_ROOT\"
-    echo \"ROOT_PERCENT=\$PERCENT_ROOT\"
-" "Checking VM disk space")
-
-# Parse the space info
-TMP_AVAIL_MB=$(echo "$VM_SPACE_INFO" | grep "TMP_AVAIL_MB=" | cut -d= -f2)
-ROOT_AVAIL_MB=$(echo "$VM_SPACE_INFO" | grep "ROOT_AVAIL_MB=" | cut -d= -f2)
-ROOT_USED_MB=$(echo "$VM_SPACE_INFO" | grep "ROOT_USED_MB=" | cut -d= -f2)
-ROOT_TOTAL_MB=$(echo "$VM_SPACE_INFO" | grep "ROOT_TOTAL_MB=" | cut -d= -f2)
-ROOT_PERCENT=$(echo "$VM_SPACE_INFO" | grep "ROOT_PERCENT=" | cut -d= -f2)
-
-echo "VM Disk Space Status:"
-echo "  Root filesystem: ${ROOT_USED_MB}MB used / ${ROOT_TOTAL_MB}MB total (${ROOT_PERCENT}% used)"
-echo "  Available on root: ${ROOT_AVAIL_MB}MB"
-echo "  Available in /tmp: ${TMP_AVAIL_MB}MB"
-echo "  Required for upload: ${TAR_SIZE_MB}MB"
-
-# Check if we have enough space (need at least tar size + 100MB buffer)
-REQUIRED_MB=$((TAR_SIZE_MB + 100))
-if [ "$TMP_AVAIL_MB" -lt "$REQUIRED_MB" ] && [ "$ROOT_AVAIL_MB" -lt "$REQUIRED_MB" ]; then
-    echo ""
-    echo "WARNING: Insufficient disk space on VM!"
-    echo "  Required: ${REQUIRED_MB}MB (${TAR_SIZE_MB}MB file + 100MB buffer)"
-    echo "  Available in /tmp: ${TMP_AVAIL_MB}MB"
-    echo "  Available on root: ${ROOT_AVAIL_MB}MB"
-    echo ""
-    echo "Cleaning up old Docker resources to free space..."
-    
-    # Clean up old Docker resources on VM BEFORE upload to free up space
-    echo "Performing cleanup..."
+# If disk is extremely low, attempt cleanup (but do not fail early; docker load will be the source of truth)
+VM_AVAIL_ROOT_MB=$(run_gcloud_ssh "df -m / | tail -1 | awk '{print \$4}'" "Checking root free space" "true" | tail -n 1 | tr -d '\r' || true)
+if [[ -n "$VM_AVAIL_ROOT_MB" ]] && [[ "$VM_AVAIL_ROOT_MB" =~ ^[0-9]+$ ]] && [ "$VM_AVAIL_ROOT_MB" -lt 300 ]; then
+    echo "Low free space detected on VM (${VM_AVAIL_ROOT_MB}MB). Attempting cleanup..."
     run_gcloud_ssh "
-        # Stop and remove existing container if it exists
         sudo docker stop $CONTAINER_NAME 2>/dev/null || true
         sudo docker rm $CONTAINER_NAME 2>/dev/null || true
-        
-        # Remove old/unused Docker images to free up space
-        sudo docker image prune -af --filter 'until=24h' || true
-        
-        # Remove old/unused containers
-        sudo docker container prune -f || true
-        
-        # Remove old/unused volumes (be careful with this)
-        sudo docker volume prune -f || true
-        
-        # Clean up old tar files
-        sudo rm -f /tmp/${IMAGE_NAME}.tar /tmp/*.tar 2>/dev/null || true
-        
-        # Show disk space after cleanup
-        echo 'Disk space after cleanup:'
-        df -h / | tail -1
-        echo ''
-        echo 'Available space in /tmp:'
-        df -h /tmp | tail -1
-    " "Cleaning up old Docker resources" || true
-    
-    # Re-check space after cleanup
-    echo ""
-    echo "Re-checking disk space after cleanup..."
-    VM_SPACE_INFO=$(run_gcloud_ssh "
-        AVAIL_TMP=\$(df -m /tmp | tail -1 | awk '{print \$4}')
-        AVAIL_ROOT=\$(df -m / | tail -1 | awk '{print \$4}')
-        echo \"TMP_AVAIL_MB=\$AVAIL_TMP\"
-        echo \"ROOT_AVAIL_MB=\$AVAIL_ROOT\"
-    " "Re-checking VM disk space")
-    
-    TMP_AVAIL_MB=$(echo "$VM_SPACE_INFO" | grep "TMP_AVAIL_MB=" | cut -d= -f2)
-    ROOT_AVAIL_MB=$(echo "$VM_SPACE_INFO" | grep "ROOT_AVAIL_MB=" | cut -d= -f2)
-    
-    echo "  Available on root: ${ROOT_AVAIL_MB}MB"
-    echo "  Available in /tmp: ${TMP_AVAIL_MB}MB"
-    
-    if [ "$TMP_AVAIL_MB" -lt "$REQUIRED_MB" ] && [ "$ROOT_AVAIL_MB" -lt "$REQUIRED_MB" ]; then
-        echo ""
-        echo "ERROR: Still insufficient disk space after cleanup!"
-        echo "  Required: ${REQUIRED_MB}MB"
-        echo "  Available: ${ROOT_AVAIL_MB}MB (root) / ${TMP_AVAIL_MB}MB (/tmp)"
-        echo ""
-        echo "Please manually free up space on the VM:"
-        echo "  gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE"
-        echo "  sudo docker system prune -af"
-        echo "  sudo docker volume prune -af"
-        exit 1
-    fi
-    echo "Sufficient space available after cleanup. Proceeding with upload..."
-else
-    echo "Sufficient disk space available. Proceeding with upload..."
-    # Still do a light cleanup to remove old tar files
-    run_gcloud_ssh "sudo rm -f /tmp/${IMAGE_NAME}.tar /tmp/*.tar 2>/dev/null || true" "Removing old tar files" "true"
-fi
-
-# Upload Docker image to VM
-echo "Uploading Docker image to VM (this may take a few minutes)..."
-echo "File size: $TAR_SIZE"
-echo "This may take several minutes for large images..."
-
-# Try upload with better error handling
-UPLOAD_OUTPUT=$(gcloud compute scp --compress "$TAR_FILE" $INSTANCE:/tmp/ --project $PROJECT --zone $ZONE 2>&1)
-UPLOAD_EXIT_CODE=$?
-
-# Show output (filter only metadata update messages, keep everything else including errors)
-if [ $UPLOAD_EXIT_CODE -eq 0 ]; then
-    # On success, filter out noise
-    echo "$UPLOAD_OUTPUT" | grep -v "^Updating project ssh metadata\.\.\." | grep -v "^Updating instance ssh metadata\.\.\." | grep -v "^\.$" | grep -v "^done\.$" || true
-    echo "Upload completed successfully!"
-else
-    # On failure, show everything including errors
-    echo "=== UPLOAD FAILED ==="
-    echo "Exit code: $UPLOAD_EXIT_CODE"
-    echo "Full output:"
-    echo "$UPLOAD_OUTPUT"
-    echo "===================="
-    echo ""
-    echo "Checking VM disk space and Docker usage..."
-    run_gcloud_ssh "
-        echo '=== Disk Space ==='
-        df -h / | tail -1
-        echo ''
-        echo '=== /tmp space ==='
-        df -h /tmp | tail -1
-        echo ''
-        echo '=== Docker disk usage ==='
-        sudo docker system df 2>/dev/null || echo 'Unable to check Docker disk usage'
-        echo ''
-        echo '=== Existing files in /tmp ==='
-        ls -lh /tmp/*.tar 2>/dev/null | head -5 || echo 'No tar files in /tmp'
-    " "Checking VM status" || true
-    echo ""
-    echo "Attempting aggressive cleanup and retry..."
-    run_gcloud_ssh "
-        echo 'Cleaning up Docker resources...'
         sudo docker system prune -af || true
         sudo docker volume prune -f || true
-        sudo rm -rf /tmp/*.tar /tmp/*.tmp 2>/dev/null || true
         echo ''
         echo 'Disk space after cleanup:'
         df -h / | tail -1
-        echo 'Available in /tmp:'
-        df -h /tmp | tail -1
-    " "Aggressive cleanup" || true
+    " "Cleaning up old Docker resources" || true
+fi
+
+# Stream Docker image to VM and load it (no tar file on VM)
+echo "Streaming Docker image to VM and loading it (no /tmp tarball)..."
+LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command "sudo docker load" -- -T 2>&1)
+LOAD_EXIT_CODE=$?
+
+if [ $LOAD_EXIT_CODE -ne 0 ]; then
+    echo "=== IMAGE LOAD FAILED ==="
+    echo "Exit code: $LOAD_EXIT_CODE"
+    echo "Output:"
+    echo "$LOAD_OUTPUT"
+    echo "========================="
     echo ""
-    echo "Retrying upload..."
-    UPLOAD_OUTPUT=$(gcloud compute scp --compress "$TAR_FILE" $INSTANCE:/tmp/ --project $PROJECT --zone $ZONE 2>&1)
-    UPLOAD_EXIT_CODE=$?
-    if [ $UPLOAD_EXIT_CODE -eq 0 ]; then
-        echo "$UPLOAD_OUTPUT" | grep -v "^Updating project ssh metadata\.\.\." | grep -v "^Updating instance ssh metadata\.\.\." | grep -v "^\.$" | grep -v "^done\.$" || true
-        echo "Upload succeeded on retry!"
-    else
-        echo "=== RETRY FAILED ==="
-        echo "Exit code: $UPLOAD_EXIT_CODE"
-        echo "Full output:"
-        echo "$UPLOAD_OUTPUT"
-        echo "===================="
-        echo ""
-        echo "ERROR: Upload failed after cleanup and retry"
-        echo "Possible causes:"
-        echo "  - Insufficient disk space on VM"
-        echo "  - Network connectivity issues"
-        echo "  - File too large for transfer"
-        echo ""
-        echo "Try manually cleaning the VM:"
-        echo "  gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command 'sudo docker system prune -af'"
+    echo "Attempting aggressive cleanup on VM and retrying image load..."
+    run_gcloud_ssh "
+        sudo docker stop $CONTAINER_NAME 2>/dev/null || true
+        sudo docker rm $CONTAINER_NAME 2>/dev/null || true
+        sudo docker system prune -af || true
+        sudo docker volume prune -f || true
+        echo ''
+        echo 'Disk space after cleanup:'
+        df -h / | tail -1
+        echo ''
+        echo 'Docker disk usage after cleanup:'
+        sudo docker system df 2>/dev/null || true
+    " "Aggressive cleanup" || true
+
+    LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command "sudo docker load" -- -T 2>&1)
+    LOAD_EXIT_CODE=$?
+    if [ $LOAD_EXIT_CODE -ne 0 ]; then
+        echo "=== IMAGE LOAD RETRY FAILED ==="
+        echo "Exit code: $LOAD_EXIT_CODE"
+        echo "Output:"
+        echo "$LOAD_OUTPUT"
+        echo "==============================="
         exit 1
     fi
 fi
 
-# Clean up local tar file
-rm -f "$TAR_FILE"
+echo "$LOAD_OUTPUT"
+echo "Image loaded successfully on VM."
 
 # Build docker run command with environment variables
 DOCKER_RUN_CMD="docker run -d \
@@ -310,34 +179,10 @@ fi
 
 DOCKER_RUN_CMD="$DOCKER_RUN_CMD $IMAGE_NAME:latest"
 
-# Check if tar file was uploaded successfully
-echo "Verifying Docker image was uploaded to VM..."
-FILE_CHECK=$(run_gcloud_ssh "test -f /tmp/${IMAGE_NAME}.tar && ls -lh /tmp/${IMAGE_NAME}.tar" "Checking if tar file exists" "true")
-if [ $? -ne 0 ] || [ -z "$FILE_CHECK" ]; then
-    echo "ERROR: Docker image tar file was not uploaded successfully"
-    echo "The file does not exist on the VM or is not accessible"
-    exit 1
-fi
-# FILE_CHECK already contains the output from the command
-
-# Load image and run container on VM
+# Run container on VM
 echo ""
 echo "=== Loading Image and Starting Container ==="
 run_gcloud_ssh "
-    # Load the Docker image (use sudo in case user is not in docker group)
-    if ! sudo docker load -i /tmp/${IMAGE_NAME}.tar; then
-        echo 'ERROR: Failed to load Docker image - likely disk space issue'
-        echo 'Current disk space:'
-        df -h /
-        echo 'Cleaning up more space...'
-        sudo docker system prune -af || true
-        # Try loading again
-        sudo docker load -i /tmp/${IMAGE_NAME}.tar || exit 1
-    fi
-    
-    # Remove tar file after successful load
-    rm -f /tmp/${IMAGE_NAME}.tar
-    
     # Stop and remove existing container if it exists
     echo 'Stopping existing container (if any)...'
     sudo docker stop $CONTAINER_NAME 2>/dev/null || true
