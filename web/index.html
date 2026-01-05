@@ -629,12 +629,41 @@
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
             }
 
             .sidebar {
                 position: relative;
                 height: auto;
-                max-height: 40vh;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .logo {
+                padding: 1rem 1.5rem;
+            }
+
+            .logo p {
+                display: none;
+            }
+
+            .refresh-section {
+                padding: 0.75rem 1.5rem;
+            }
+
+            .summary-list {
+                max-height: 30vh;
+                overflow-y: auto;
+            }
+
+            .summary-list h2 {
+                padding: 0.5rem 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+
+            .summary-item {
+                padding: 0.6rem 1.5rem;
             }
 
             .main {
