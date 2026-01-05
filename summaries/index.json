@@ -1,12 +1,5 @@
 [
   {
-    "timestamp": "2026-01-05",
-    "jsonFile": "2026-01-05_summary.json",
-    "articlesCount": 1,
-    "aiArticlesCount": 0,
-    "generatedAt": "2026-01-05T03:27:12.807491+00:00"
-  },
-  {
     "timestamp": "2026-01-04_08-12-28",
     "jsonFile": "2026-01-04_08-12-28_summary.json",
     "articlesCount": 5,

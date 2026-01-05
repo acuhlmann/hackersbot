@@ -245,6 +245,14 @@ class TestRefreshUI:
         
         test_json_file = summaries_dir / f"{today}_summary.json"
         original_exists = test_json_file.exists()
+        original_contents = None
+        if original_exists:
+            # IMPORTANT: this test must not overwrite real summary data
+            # (the summaries folder is also used by the app itself).
+            try:
+                original_contents = test_json_file.read_text(encoding="utf-8")
+            except Exception:
+                original_contents = None
         
         try:
             with open(test_json_file, 'w') as f:
@@ -328,9 +336,13 @@ class TestRefreshUI:
             assert 'Last refresh' in final_status or 'Refresh started' in final_status or 'Refreshing' in final_status
             
         finally:
-            # Clean up test file if we created it
-            if not original_exists and test_json_file.exists():
-                test_json_file.unlink()
+            # Restore original file if it existed, otherwise remove.
+            if original_exists:
+                if original_contents is not None:
+                    test_json_file.write_text(original_contents, encoding="utf-8")
+            else:
+                if test_json_file.exists():
+                    test_json_file.unlink()
     
     def test_refresh_button_disabled_during_refresh(self, page, test_server):
         """Test that refresh button is disabled while refresh is in progress."""
