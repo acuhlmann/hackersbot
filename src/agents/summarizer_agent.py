@@ -11,15 +11,14 @@ logger = logging.getLogger(__name__)
 class SummarizerAgent:
     """Generates summaries of articles and comments using LLM"""
     
-    def __init__(self, llm_client: Optional[LLMClient] = None, provider: Optional[str] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         """
         Initialize summarizer agent.
         
         Args:
             llm_client: Optional LLMClient instance (creates new one if not provided)
-            provider: LLM provider ('ollama' or 'deepseek') if creating new client
         """
-        self.llm_client = llm_client or get_llm_client(provider=provider)
+        self.llm_client = llm_client or get_llm_client()
     
     def summarize_article(self, article: Dict, include_comments: bool = True) -> Dict:
         """

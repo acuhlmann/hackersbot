@@ -89,34 +89,6 @@ def sample_summarized_article(sample_article_with_comments):
 
 
 @pytest.fixture
-def mock_ollama_client():
-    """Mock OllamaClient for testing agents"""
-    mock_client = Mock()
-    
-    # Mock summarize method
-    mock_client.summarize.return_value = "This is a test summary."
-    
-    # Mock classify_ai_topic method
-    mock_client.classify_ai_topic.return_value = {
-        "is_ai_related": True,
-        "confidence": 0.9,
-        "reasoning": "Content is about AI"
-    }
-    
-    # Mock get_summarizer_llm
-    mock_summarizer_llm = Mock()
-    mock_summarizer_llm.invoke.return_value = "Test summary response"
-    mock_client.get_summarizer_llm.return_value = mock_summarizer_llm
-    
-    # Mock get_filter_llm
-    mock_filter_llm = Mock()
-    mock_filter_llm.invoke.return_value = '{"sentiment": "positive", "score": 0.8, "details": "Test details", "topics": ["AI", "tech"]}'
-    mock_client.get_filter_llm.return_value = mock_filter_llm
-    
-    return mock_client
-
-
-@pytest.fixture
 def mock_llm_client():
     """Mock LLMClient for testing agents (unified interface)"""
     mock_client = Mock()

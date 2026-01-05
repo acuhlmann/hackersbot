@@ -439,3 +439,115 @@ class ScraperAgent:
         
         return articles
 
+    def scrape_single_article(self, item_id: str) -> Optional[Dict]:
+        """
+        Scrape a single article from Hacker News by its item ID.
+        
+        Args:
+            item_id: The HN item ID (e.g., "46458936")
+            
+        Returns:
+            Article dictionary with title, url, points, author, comments, etc.
+            Returns None if the article cannot be found or parsed.
+        """
+        item_url = f"{self.BASE_URL}/item?id={item_id}"
+        
+        try:
+            logger.info("Fetching single article: %s", item_url)
+            response = self.session.get(item_url, timeout=self.timeout)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.content, "html.parser")
+            
+            # Find the article row (first athing with the item ID)
+            article_row = soup.find("tr", class_="athing", id=item_id)
+            if not article_row:
+                logger.warning("Article row not found for item ID: %s", item_id)
+                return None
+            
+            # Get title and URL
+            title_elem = article_row.find("span", class_="titleline")
+            if not title_elem:
+                logger.warning("Title element not found for item ID: %s", item_id)
+                return None
+            
+            link = title_elem.find("a")
+            if not link:
+                logger.warning("Link not found for item ID: %s", item_id)
+                return None
+            
+            title = link.get_text(strip=True)
+            url = link.get("href", "")
+            
+            # Make absolute URL if relative
+            if url and not url.startswith("http"):
+                url = urljoin(self.BASE_URL, url)
+            
+            # Get metadata from the subtext row
+            points = 0
+            author = ""
+            time_ago = ""
+            comment_count = 0
+            
+            # Find the subtext row (next sibling)
+            next_row = article_row.find_next_sibling("tr")
+            if next_row:
+                subtext = next_row.find("td", class_="subtext")
+                if subtext:
+                    # Extract points
+                    score_elem = subtext.find("span", class_="score")
+                    if score_elem:
+                        points_text = score_elem.get_text(strip=True)
+                        points_match = re.search(r"(\d+)", points_text)
+                        if points_match:
+                            points = int(points_match.group(1))
+                    
+                    # Extract author
+                    author_elem = subtext.find("a", class_="hnuser")
+                    if author_elem:
+                        author = author_elem.get_text(strip=True)
+                    
+                    # Extract time
+                    time_elem = subtext.find("span", class_="age")
+                    if time_elem:
+                        time_ago = time_elem.get("title", time_elem.get_text(strip=True))
+                    
+                    # Extract comment count
+                    comment_links = subtext.find_all("a", href=re.compile(r"item\?id=\d+"))
+                    for clink in comment_links:
+                        text = clink.get_text(strip=True)
+                        if "comment" in text.lower() or "discuss" in text.lower():
+                            comment_count_match = re.search(r"(\d+)", text)
+                            if comment_count_match:
+                                comment_count = int(comment_count_match.group(1))
+                            break
+            
+            article = {
+                "id": item_id,
+                "rank": 1,  # Single article, no ranking context
+                "title": title,
+                "url": url,
+                "points": points,
+                "author": author,
+                "time": time_ago,
+                "comment_count": comment_count,
+                "comment_url": item_url
+            }
+            
+            # Fetch comments
+            logger.info("Fetching comments for: %s...", title[:50])
+            comments = self.fetch_comments(item_url)
+            logger.info("  Found %d comments", len(comments))
+            article["comments"] = comments
+            
+            # Fetch article content
+            article["content"] = self.fetch_article_content(url)
+            
+            return article
+            
+        except requests.RequestException as e:
+            logger.error("Error fetching article %s: %s", item_id, e)
+            return None
+        except Exception as e:
+            logger.error("Unexpected error scraping article %s: %s", item_id, e)
+            return None
+

@@ -17,7 +17,7 @@ class TestFilterAgent:
         """Test FilterAgent creates LLMClient if not provided"""
         with patch('src.agents.filter_agent.get_llm_client') as mock_get_client:
             agent = FilterAgent()
-            mock_get_client.assert_called_once_with(provider=None)
+            mock_get_client.assert_called_once_with()
     
     def test_filter_agent_initialization_custom_client(self, mock_llm_client):
         """Test FilterAgent uses provided LLMClient"""
@@ -51,8 +51,8 @@ class TestFilterAgent:
         assert result["is_ai_related"] is False
         assert result["confidence"] == 0.1
     
-    def test_classify_article_calls_ollama(self, filter_agent, sample_article_with_content):
-        """Test that classify_article calls Ollama client correctly"""
+    def test_classify_article_calls_llm_client(self, filter_agent, sample_article_with_content):
+        """Test that classify_article calls LLM client correctly"""
         filter_agent.classify_article(sample_article_with_content)
         
         filter_agent.llm_client.classify_ai_topic.assert_called_once_with(

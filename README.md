@@ -1,15 +1,13 @@
 # HackerNews AI Summarizer Agent
 
-A multi-agent Python application that scrapes Hacker News, filters AI-related topics, and generates summaries using LLMs. Supports both local models (Ollama) and cloud APIs (Deepseek).
+A multi-agent Python application that scrapes Hacker News, filters AI-related topics, and generates summaries using DeepSeek's cloud API.
 
 ## Features
 
 - Scrapes top N articles from Hacker News
 - Extracts and parses article comments
 - Filters AI-related topics (optional)
-- **Multiple LLM providers:**
-  - Local: Ollama with Qwen models
-  - Cloud: Deepseek API (great for mobile/remote access)
+- Uses DeepSeek API for AI-powered summaries
 - **Telegram Bot** for mobile access 📱
 - Saves summaries in multiple formats (JSON, Markdown)
 - Console and file output support
@@ -17,12 +15,8 @@ A multi-agent Python application that scrapes Hacker News, filters AI-related to
 ## Prerequisites
 
 - Python 3.9+
-- **For local LLM (Ollama):**
-  - Ollama installed and running locally
-  - Qwen models downloaded (e.g., `qwen2.5:7b`)
-- **For cloud LLM (Deepseek):**
-  - Deepseek API key from https://platform.deepseek.com
-- **For Telegram Bot:**
+- DeepSeek API key from https://platform.deepseek.com
+- **For Telegram Bot (optional):**
   - Telegram Bot Token from @BotFather
 
 ## Setup
@@ -77,7 +71,7 @@ pip install -r requirements.txt
 
 ### Step 4: Configure Environment
 
-Create a `.env` file for custom configuration:
+Create a `.env` file for your API key:
 ```bash
 # Windows
 copy .env.example .env
@@ -86,36 +80,19 @@ copy .env.example .env
 cp .env.example .env
 ```
 
-Edit `.env` to configure your LLM provider and API keys:
+Edit `.env` and add your DeepSeek API key:
 
 ```bash
-# Choose provider: 'ollama' (local) or 'deepseek' (cloud)
-LLM_PROVIDER=deepseek
-
-# For Deepseek (cloud API)
+# Deepseek API Configuration
 DEEPSEEK_API_KEY=your-api-key-here
 
-# For Telegram Bot
-TELEGRAM_BOT_TOKEN=your-bot-token-here
-
-# For Ollama (local) - optional
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_SUMMARIZER_MODEL=qwen2.5:7b
+# Optional: Specify which model to use (default: deepseek-chat)
+# DEEPSEEK_MODEL=deepseek-chat
 ```
 
-### Step 5: Setup Ollama Models
+Get your API key from: https://platform.deepseek.com
 
-Ensure Ollama is running and download Qwen models:
-```bash
-# Check if Ollama is running
-ollama list
-
-# Download Qwen models
-ollama pull qwen2.5:7b
-ollama pull qwen2.5:14b  # Optional, for better summaries
-```
-
-**Note:** The first time you run the app, it will download models if they're not already available.
+**Note:** The `.env` file is automatically loaded when you run the application. In production (e.g., GitHub Actions, Docker), environment variables are typically injected by the system.
 
 ## Usage
 
@@ -144,16 +121,6 @@ python -m src.main --top-n 3 --output-format file
 python -m src.main --top-n 3 --output-format both
 ```
 
-### Using Deepseek (Cloud API)
-
-```bash
-# Use Deepseek instead of local Ollama
-python -m src.main --top-n 3 --provider deepseek
-
-# With AI filtering using Deepseek
-python -m src.main --top-n 30 --filter-ai --provider deepseek
-```
-
 ## 📱 Telegram Bot
 
 Access your HN summaries from anywhere via Telegram!
@@ -171,11 +138,7 @@ Access your HN summaries from anywhere via Telegram!
 ### Run the Bot
 
 ```bash
-# Run with Deepseek (recommended for mobile)
 python -m src.telegram_bot
-
-# Run with local Ollama
-python -m src.telegram_bot --provider ollama
 ```
 
 ### Bot Commands
@@ -233,8 +196,7 @@ export PORT=8080
 # Set bind address (default: 0.0.0.0 for Docker, localhost for local)
 export BIND_ADDRESS=localhost
 
-# Set LLM provider for refresh functionality
-export LLM_PROVIDER=deepseek
+# Set your DeepSeek API key
 export DEEPSEEK_API_KEY=your-api-key-here
 ```
 
@@ -295,7 +257,7 @@ Summaries are saved in the `outputs/` directory with timestamps:
 The application uses a multi-agent architecture:
 - **Scraper Agent**: Fetches and parses Hacker News articles and comments
 - **Filter Agent**: Identifies AI-related topics
-- **Summarizer Agent**: Generates summaries using Qwen models via Ollama
+- **Summarizer Agent**: Generates summaries using DeepSeek API
 
 ## Configuration
 
@@ -303,15 +265,10 @@ Edit `.env` to customize your setup:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `ollama` | LLM provider: `ollama` or `deepseek` |
-| `DEEPSEEK_API_KEY` | - | Your Deepseek API key |
-| `DEEPSEEK_MODEL` | `deepseek-chat` | Deepseek model to use |
+| `DEEPSEEK_API_KEY` | - | Your DeepSeek API key (required) |
+| `DEEPSEEK_MODEL` | `deepseek-chat` | DeepSeek model to use |
 | `TELEGRAM_BOT_TOKEN` | - | Telegram bot token from @BotFather |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL |
-| `OLLAMA_SUMMARIZER_MODEL` | `qwen2.5:7b` | Model for summarization |
-| `OLLAMA_FILTER_MODEL` | `qwen2.5:7b` | Model for AI classification |
 
 ## License
 
 MIT
-

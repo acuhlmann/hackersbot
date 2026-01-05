@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Group updates for related packages
+    groups:
+      langchain-packages:
+        patterns:
+          - "langchain*"
+      testing-packages:
+        patterns:
+          - "pytest*"
+          - "playwright"
+          - "responses"
+    # Ignore major version updates for critical packages (uncomment if needed)
+    # ignore:
+    #   - dependency-name: "langchain"
+    #     update-types: ["version-update:semver-major"]
+    #   - dependency-name: "python-telegram-bot"
+    #     update-types: ["version-update:semver-major"]
+

@@ -3,6 +3,7 @@
 import os
 import logging
 import asyncio
+from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -20,7 +21,16 @@ from src.agents.filter_agent import FilterAgent
 from src.agents.summarizer_agent import SummarizerAgent
 from src.models.llm_client import get_llm_client
 
-load_dotenv()
+# Load .env file (not .env.example - that's just a template)
+# In production (GitHub Actions, GCP VM), environment variables are injected directly
+# so .env file won't exist and load_dotenv() will silently continue
+try:
+    # Find project root (go up from src/ to project root)
+    project_root = Path(__file__).parent.parent.resolve()
+    load_dotenv(dotenv_path=str(project_root / '.env'))  # Explicitly load from project root
+except Exception:
+    # If .env file has issues, continue - production uses injected env vars
+    pass
 
 # Configure logging
 logging.basicConfig(
@@ -30,20 +40,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Default settings
-DEFAULT_PROVIDER = os.getenv("LLM_PROVIDER", "deepseek")
 DEFAULT_TOP_N = 3
 
 
 class HNSummaryBot:
     """Telegram bot that provides Hacker News summaries"""
     
-    def __init__(self, token: Optional[str] = None, provider: Optional[str] = None):
+    def __init__(self, token: Optional[str] = None):
         """
         Initialize the bot.
         
         Args:
             token: Telegram bot token (default: from TELEGRAM_BOT_TOKEN env var)
-            provider: LLM provider (default: from LLM_PROVIDER env var or 'deepseek')
         """
         self.token = token or os.getenv("TELEGRAM_BOT_TOKEN")
         if not self.token:
@@ -51,15 +59,14 @@ class HNSummaryBot:
                 "Telegram bot token is required. Set TELEGRAM_BOT_TOKEN environment variable."
             )
         
-        self.provider = provider or DEFAULT_PROVIDER
-        self.llm_client = get_llm_client(provider=self.provider)
+        self.llm_client = get_llm_client()
         
         # Initialize agents
         self.scraper = ScraperAgent()
         self.filter_agent = FilterAgent(llm_client=self.llm_client)
         self.summarizer = SummarizerAgent(llm_client=self.llm_client)
         
-        logger.info(f"Bot initialized with LLM provider: {self.provider}")
+        logger.info("Bot initialized with DeepSeek LLM")
     
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /start command"""
@@ -74,10 +81,10 @@ I can fetch and summarize the top articles from Hacker News for you.
 /ai N - Get top N AI-related articles
 /help - Show this help message
 
-🤖 Currently using: {provider} for AI summaries
+🤖 Powered by DeepSeek AI
 
 Just send a command to get started!
-""".format(provider=self.provider.upper())
+"""
         
         await update.message.reply_text(welcome_message, parse_mode='Markdown')
     
@@ -97,8 +104,8 @@ Just send a command to get started!
 • AI filtering scans more articles to find relevant ones
 • Each summary takes ~10-30 seconds depending on article count
 
-🤖 Provider: {provider}
-""".format(provider=self.provider.upper())
+🤖 Powered by DeepSeek AI
+"""
         
         await update.message.reply_text(help_text, parse_mode='Markdown')
     
@@ -157,7 +164,7 @@ Just send a command to get started!
             
             await status_msg.edit_text(
                 f"✅ Found {len(articles)} articles\n"
-                f"🤖 Analyzing with {self.provider.upper()}..."
+                f"🤖 Analyzing with DeepSeek..."
             )
             
             # Step 2: Filter if requested
@@ -280,19 +287,8 @@ Just send a command to get started!
 
 def main():
     """Entry point for the Telegram bot"""
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="HackerNews AI Summarizer Telegram Bot")
-    parser.add_argument(
-        "--provider",
-        choices=["ollama", "deepseek"],
-        default=os.getenv("LLM_PROVIDER", "deepseek"),
-        help="LLM provider (default: deepseek)"
-    )
-    args = parser.parse_args()
-    
     try:
-        bot = HNSummaryBot(provider=args.provider)
+        bot = HNSummaryBot()
         bot.run()
     except KeyboardInterrupt:
         logger.info("Bot stopped by user")

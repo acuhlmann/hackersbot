@@ -1,0 +1,32 @@
+[
+  {
+    "itemId": "46488576",
+    "title": "Web development is fun again",
+    "url": "https://ma.ttias.be/web-development-is-fun-again/",
+    "hnUrl": "https://news.ycombinator.com/item?id=46488576",
+    "jsonFile": "46488576_summary.json",
+    "generatedAt": "2026-01-05T22:40:08.776028",
+    "points": 436,
+    "commentCount": 524
+  },
+  {
+    "itemId": "46439064",
+    "title": "Attention Is Bayesian Inference",
+    "url": "https://medium.com/@vishalmisra/attention-is-bayesian-inference-578c25db4501",
+    "hnUrl": "https://news.ycombinator.com/item?id=46439064",
+    "jsonFile": "46439064_summary.json",
+    "generatedAt": "2026-01-05T22:32:16.322457",
+    "points": 144,
+    "commentCount": 31
+  },
+  {
+    "itemId": "46458936",
+    "title": "Welcome to Gas Town",
+    "url": "https://steve-yegge.medium.com/welcome-to-gas-town-4f25ee16dd04",
+    "hnUrl": "https://news.ycombinator.com/item?id=46458936",
+    "jsonFile": "46458936_summary.json",
+    "generatedAt": "2026-01-05T22:25:04.902341",
+    "points": 46,
+    "commentCount": 10
+  }
+]

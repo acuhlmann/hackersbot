@@ -2,7 +2,21 @@
 
 import logging
 import click
+from pathlib import Path
 from typing import List, Dict
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (not .env.example - that's just a template)
+# In production (GitHub Actions, GCP VM), environment variables are injected directly
+# so .env file won't exist and load_dotenv() will silently continue
+try:
+    # Find project root (go up from src/ to project root)
+    project_root = Path(__file__).parent.parent.resolve()
+    load_dotenv(dotenv_path=str(project_root / '.env'))  # Explicitly load from project root
+except Exception as e:
+    # If .env file has encoding issues, log warning but continue
+    # Production environments use injected env vars, so this is fine
+    print(f"Warning: Could not load .env file: {e}. Continuing with environment variables.", flush=True)
 
 # Configure logging
 logging.basicConfig(
@@ -46,13 +60,7 @@ from src.models.llm_client import get_llm_client
     is_flag=True,
     help="Skip comment summarization (faster)"
 )
-@click.option(
-    "--provider",
-    type=click.Choice(["auto", "ollama", "deepseek"], case_sensitive=False),
-    default="auto",
-    help="LLM provider: auto (detect best), ollama (local), or deepseek (cloud API). Default: auto"
-)
-def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float, no_comments: bool, provider: str):
+def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float, no_comments: bool):
     """
     HackerNews AI Summarizer - Scrape and summarize top articles from Hacker News.
     
@@ -65,9 +73,9 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
     click.echo("🚀 Starting HackerNews AI Summarizer...")
     click.echo(f"📊 Fetching top {top_n} articles...")
     
-    # Initialize shared LLM client (auto-detects best provider if not specified)
-    llm_client = get_llm_client(provider=provider)
-    click.echo(f"🤖 Using LLM provider: {llm_client.provider}")
+    # Initialize shared LLM client (uses DeepSeek)
+    llm_client = get_llm_client()
+    click.echo("🤖 Using DeepSeek LLM")
     
     # Initialize agents with shared LLM client
     scraper = ScraperAgent()
@@ -110,7 +118,7 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
         "min_confidence": min_confidence if filter_ai else None,
         "include_comments": not no_comments,
         "articles_count": len(articles),
-        "llm_provider": provider
+        "llm_provider": "deepseek"
     }
     
     if output_format in ["console", "both"]:
@@ -140,4 +148,3 @@ def main(top_n: int, output_format: str, filter_ai: bool, min_confidence: float,
 
 if __name__ == "__main__":
     main()
-

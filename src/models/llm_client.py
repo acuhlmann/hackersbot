@@ -1,111 +1,52 @@
-"""Unified LLM client interface that supports multiple providers"""
+"""Unified LLM client interface - DeepSeek only"""
 
 import os
 import logging
-import urllib.request
-import urllib.error
-import json
 import time
-from typing import Optional, Dict, Any, Literal, List, Callable, TypedDict, cast
+from pathlib import Path
+from typing import Optional, Dict, Any, Callable
 from dotenv import load_dotenv
-
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Type for provider selection
-LLMProvider = Literal["ollama", "deepseek", "auto"]
-
-
-def check_ollama_available(base_url: str = "http://localhost:11434") -> tuple[bool, List[str]]:
-    """
-    Check if Ollama is running and has models available.
-    
-    Args:
-        base_url: Ollama API base URL
-        
-    Returns:
-        Tuple of (is_available, list_of_models)
-    """
-    try:
-        # Check if Ollama API is responding
-        req = urllib.request.Request(f"{base_url}/api/tags", method="GET")
-        req.add_header("Content-Type", "application/json")
-        
-        with urllib.request.urlopen(req, timeout=3) as response:
-            data = json.loads(response.read().decode())
-            models = [m.get("name", "") for m in data.get("models", [])]
-            return len(models) > 0, models
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, Exception) as e:
-        logger.debug(f"Ollama not available: {e}")
-        return False, []
-
-
-def detect_best_provider() -> LLMProvider:
-    """
-    Auto-detect the best available LLM provider.
-    
-    Priority:
-    1. If OLLAMA is available locally with models, use it
-    2. If DEEPSEEK_API_KEY is set, use deepseek
-    3. Fall back to ollama (will error if not available)
-    
-    Returns:
-        The recommended provider name
-    """
-    # Check for Ollama first (local is preferred)
-    ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    ollama_available, models = check_ollama_available(ollama_url)
-    
-    if ollama_available:
-        logger.info(f"Ollama detected with {len(models)} model(s): {', '.join(models[:3])}{'...' if len(models) > 3 else ''}")
-        return "ollama"
-    
-    # Check for Deepseek API key
-    if os.getenv("DEEPSEEK_API_KEY"):
-        logger.info("Using Deepseek API (DEEPSEEK_API_KEY found)")
-        return "deepseek"
-    
-    # Default to ollama (will show error when used if not available)
-    logger.warning("No LLM provider detected. Defaulting to ollama.")
-    return "ollama"
+# Load .env file (not .env.example - that's just a template)
+# In production (GitHub Actions, GCP VM), environment variables are injected directly
+# so .env file won't exist and load_dotenv() will silently continue
+try:
+    # Find project root (go up from src/models/ to project root)
+    project_root = Path(__file__).parent.parent.parent.resolve()
+    load_dotenv(dotenv_path=str(project_root / '.env'))  # Explicitly load from project root
+except Exception as e:
+    # If .env file has encoding issues, log warning but continue
+    # Production environments use injected env vars, so this is fine
+    logger.warning(f"Could not load .env file: {e}. Continuing with environment variables.")
 
 
 class LLMClient:
     """
-    Unified LLM client that can use either Ollama (local) or Deepseek (cloud).
+    LLM client that uses DeepSeek API.
     
-    This provides a consistent interface regardless of the backend provider.
+    This provides a consistent interface for all LLM operations.
     """
     
     def __init__(
         self,
-        provider: Optional[LLMProvider] = None,
         event_handler: Optional[Callable[[Dict[str, Any]], None]] = None,
         **kwargs
     ):
         """
-        Initialize LLM client with specified provider.
+        Initialize LLM client with DeepSeek.
         
         Args:
-            provider: LLM provider ('ollama', 'deepseek', or 'auto'). 
-                     Default: 'auto' (auto-detect best available provider)
+            event_handler: Optional callback for instrumentation events
             **kwargs: Additional arguments passed to the underlying client
         """
-        # Get provider from argument, env var, or auto-detect
-        requested_provider = provider or os.getenv("LLM_PROVIDER", "auto")
-        
-        # Auto-detect if requested
-        if requested_provider == "auto":
-            self.provider = detect_best_provider()
-        else:
-            self.provider = requested_provider
-        
+        self.provider = "deepseek"
         self._client = None
         self._kwargs = kwargs
         self._event_handler = event_handler
         
-        logger.info(f"Initializing LLM client with provider: {self.provider}")
+        logger.info("Initializing LLM client with DeepSeek")
 
     def _emit(self, payload: Dict[str, Any]) -> None:
         """Emit an instrumentation event, if configured."""
@@ -127,19 +68,15 @@ class LLMClient:
 
     @property
     def client(self):
-        """Lazy-load the appropriate client"""
+        """Lazy-load the DeepSeek client"""
         if self._client is None:
-            if self.provider == "deepseek":
-                from src.models.deepseek_client import DeepseekClient
-                self._client = DeepseekClient(**self._kwargs)
-            else:
-                from src.models.ollama_client import OllamaClient
-                self._client = OllamaClient(**self._kwargs)
+            from src.models.deepseek_client import DeepseekClient
+            self._client = DeepseekClient(**self._kwargs)
         return self._client
 
     def summarize(self, text: str, max_length: Optional[int] = None) -> str:
         """
-        Summarize text using the configured provider.
+        Summarize text using DeepSeek.
         
         Args:
             text: Text to summarize
@@ -235,11 +172,11 @@ class LLMClient:
 
     def generate(self, prompt: str, temperature: float = 0.7) -> str:
         """
-        Generate text using the configured provider.
+        Generate text using DeepSeek.
         
         Args:
             prompt: Input prompt
-            temperature: Sampling temperature (for Deepseek; ignored for Ollama which uses model_type)
+            temperature: Sampling temperature
             
         Returns:
             Generated text
@@ -255,11 +192,7 @@ class LLMClient:
             }
         )
         try:
-            if self.provider == "deepseek":
-                result = self.client.generate(prompt, temperature=temperature)
-            else:
-                # Ollama client uses model_type parameter
-                result = self.client.generate(prompt, model_type="general")
+            result = self.client.generate(prompt, temperature=temperature)
             elapsed_ms = int((time.time() - started) * 1000)
             self._emit(
                 {
@@ -286,32 +219,16 @@ class LLMClient:
 
     def get_filter_llm(self):
         """
-        Get the filter LLM (for direct access when needed).
-        For Ollama, returns the filter-specific LLM.
-        For Deepseek, returns self (uses same client).
+        Get the filter LLM.
+        Returns self since DeepSeek uses a single client for all operations.
         """
-        if self.provider == "ollama":
-            return _InvokeWrapper(
-                self.client.get_filter_llm(),
-                self._emit,
-                provider=self.provider,
-                role="filter",
-            )
         return self
 
     def get_summarizer_llm(self):
         """
-        Get the summarizer LLM (for direct access when needed).
-        For Ollama, returns the summarizer-specific LLM.
-        For Deepseek, returns self (uses same client).
+        Get the summarizer LLM.
+        Returns self since DeepSeek uses a single client for all operations.
         """
-        if self.provider == "ollama":
-            return _InvokeWrapper(
-                self.client.get_summarizer_llm(),
-                self._emit,
-                provider=self.provider,
-                role="summarizer",
-            )
         return self
 
     def invoke(self, prompt: str) -> str:
@@ -334,11 +251,7 @@ class LLMClient:
             }
         )
         try:
-            if self.provider == "deepseek":
-                result = self.client.generate(prompt, temperature=0.3)
-            else:
-                # For Ollama, use the summarizer LLM
-                result = self.client.get_summarizer_llm().invoke(prompt)
+            result = self.client.generate(prompt, temperature=0.3)
             result_str = str(result).strip()
             elapsed_ms = int((time.time() - started) * 1000)
             self._emit(
@@ -365,72 +278,16 @@ class LLMClient:
             raise
 
 
-class _InvokeWrapper:
-    """Wraps an object with an .invoke(prompt) method and emits events."""
-
-    def __init__(
-        self,
-        llm: Any,
-        emit: Callable[[Dict[str, Any]], None],
-        *,
-        provider: str,
-        role: str,
-    ):
-        self._llm = llm
-        self._emit = emit
-        self._provider = provider
-        self._role = role
-
-    def invoke(self, prompt: str) -> str:
-        started = time.time()
-        self._emit(
-            {
-                "type": "llm_request",
-                "provider": self._provider,
-                "role": self._role,
-                "prompt_excerpt": LLMClient._clip(prompt, 900),
-            }
-        )
-        try:
-            result = self._llm.invoke(prompt)
-            result_str = str(result).strip()
-            elapsed_ms = int((time.time() - started) * 1000)
-            self._emit(
-                {
-                    "type": "llm_response",
-                    "provider": self._provider,
-                    "role": self._role,
-                    "elapsed_ms": elapsed_ms,
-                    "response_excerpt": LLMClient._clip(result_str, 900),
-                }
-            )
-            return result_str
-        except Exception as e:
-            elapsed_ms = int((time.time() - started) * 1000)
-            self._emit(
-                {
-                    "type": "llm_error",
-                    "provider": self._provider,
-                    "role": self._role,
-                    "elapsed_ms": elapsed_ms,
-                    "error": str(e),
-                }
-            )
-            raise
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self._llm, name)
-
-
-def get_llm_client(provider: Optional[LLMProvider] = None, **kwargs) -> LLMClient:
+def get_llm_client(**kwargs) -> LLMClient:
     """
     Factory function to get an LLM client.
     
     Args:
-        provider: LLM provider ('ollama' or 'deepseek')
         **kwargs: Additional arguments for the client
         
     Returns:
         Configured LLMClient instance
     """
-    return LLMClient(provider=provider, **kwargs)
+    # Remove 'provider' kwarg if present (no longer used)
+    kwargs.pop('provider', None)
+    return LLMClient(**kwargs)

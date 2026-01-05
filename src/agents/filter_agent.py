@@ -11,15 +11,14 @@ Classification = Dict[str, Any]
 class FilterAgent:
     """Filters articles to identify AI-related topics"""
     
-    def __init__(self, llm_client: Optional[LLMClient] = None, provider: Optional[str] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         """
         Initialize filter agent.
         
         Args:
             llm_client: Optional LLMClient instance (creates new one if not provided)
-            provider: LLM provider ('ollama' or 'deepseek') if creating new client
         """
-        self.llm_client = llm_client or get_llm_client(provider=provider)
+        self.llm_client = llm_client or get_llm_client()
     
     def filter_ai_articles(self, articles: List[Dict], min_confidence: float = 0.5) -> List[Dict]:
         """

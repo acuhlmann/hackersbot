@@ -1,0 +1,265 @@
+{
+  "item_id": "46439064",
+  "hn_url": "https://news.ycombinator.com/item?id=46439064",
+  "generated_at": "2026-01-05T22:32:16.322457",
+  "metadata": {
+    "llm_provider": "deepseek",
+    "include_comments": true
+  },
+  "article": {
+    "id": "46439064",
+    "rank": 1,
+    "title": "Attention Is Bayesian Inference",
+    "url": "https://medium.com/@vishalmisra/attention-is-bayesian-inference-578c25db4501",
+    "points": 144,
+    "author": "samwillis",
+    "time": "2025-12-30T22:51:18 1767135078",
+    "comment_count": 31,
+    "comment_url": "https://news.ycombinator.com/item?id=46439064",
+    "comments": [
+      {
+        "id": "46498976",
+        "author": "kianN",
+        "text": "I've read through most of the first paper mentioned.\nHere, the authors have taken set up two synthetic experiments where transformers have to learn the probability of observing events from a sampled from a \"ground truth\" Bayesian model. If the probability assigned by the transformers to the event space matches the Bayesian posterior predictive distribution, then the authors infer that the model is performing Bayesian inference for these tasks. Furthermore, they use this to argue that transformers are performing Bayesian inference in general (belief-propagation throughout layers).\nThe transformers are trained on thousands of different \"ground truth\" Bayesian models, each randomly initialized which means that there's no underlying signal to be learned besides the belief propagation mechanism itself. This makes me wonder if any sufficiently powerful maximum likelihood-based model would meet this criteria of \"doing Bayesian inference\" in this scenario.\nThe transformers in this paper do not intrinsically know to perform inference due to the fact that they're transformers. They perform inference because the optimal solution to the problems in the experiments is specifically to do inference, and transformers are powerful enough to model belief propagation. I find it hard to extrapolate that this is what is happening for LLMs, for example.",
+        "time": "2026-01-04T16:30:54 1767544254",
+        "indent_level": 0
+      },
+      {
+        "id": "46489503",
+        "author": "vessenes",
+        "text": "I don’t love these “X is Bayesian” analogies because they tend to ignore the most critical part of Bayesian modeling: sampling with detailed with detailed balance.\nThis article goes into the implicit prior/posterior updating during LLM inference; you can even go a step further and directly implement hierarchical relationships between layers with H-Nets. However, even under an explicit Bayesian framework, there’s a stark difference in robustness between these H-Nets and the equivalent Bayesian model with the only variable being the parameter estimation process. [1]\n[1]\nhttps://blog.sturdystatistics.com/posts/hnet_part_II/",
+        "time": "2026-01-04T17:21:06 1767547266",
+        "indent_level": 0
+      },
+      {
+        "id": "46490022",
+        "author": "CuriouslyC",
+        "text": "Not a professional, but an avid researcher/reader.\nThese papers look promising, but a few initial strikes - first, the research itself was clearly done with agentic support; I'd guess from the blog post and the papers that actually the research was done by agents with human support. Lots of persistent give aways like overcommitting to weird titles like \"Wind Tunnel\" and all of the obvious turns of phrase in the medium post unfortunately carry on into the papers themselves. This doesn't mean they're\nwrong\nbut I do think it means what they have is less info dense and less obviously correct, given today's state of the art with agentic research.\nUpshot of the papers, there's one claim - each layer of a well trained transformer network allows a bayesian 'update' and selection of \"truth\" or preference of the model; deeper layers in the architecture = more accuracy. Thinking models = a chance to refresh the context and get back to the start of the layers to do further refinement.\nThere's a followup claim - that thinking about what the models are doing as solely updating weights for this bayesian process will get more efficient training.\nData in the paper - I didn't read deeply enough to decide if this whole \"it's all Bayes all the way down\" seems true to me. they show that if you ablate single layers then accuracy drops. But that is not news.\nThey do show significantly faster (per round) loss reduction using EM training vs SGD, but they acknowledge this converges to the same loss eventually (although their graphs do not show this convergence, btw), and crucially they do absolutely no reporting on compute required, or comparison with more modern methods.\nUpshot - I think I'd skip this and kind of regret the time I spent reading the papers. Might be true, but a) so what, and b) we don't have anything falsifiable or genuinely useful out of the theory. Maybe if we could splice together different models in a new and cool way past merging layers, then I'd say we have something interesting out of this.",
+        "time": "2026-01-04T14:45:43 1767537943",
+        "indent_level": 0
+      },
+      {
+        "id": "46488435",
+        "author": "behnamoh",
+        "text": "Pretty interesting. The posterior matching is a big deal, but I'm not convinced by the handwaiving required to demonstrate it in larger models. I'm interested in seeing how direct EM training scales though.",
+        "time": "2026-01-04T16:17:02 1767543422",
+        "indent_level": 0
+      },
+      {
+        "id": "46489375",
+        "author": "roger_",
+        "text": "sure, but this stuff is only obvious post hoc. so many people have tried to \"justify\" the attention mechanism according to their area of expertise, but none of them came up with it first; ML engineers with ML thinking did.",
+        "time": "2026-01-04T15:55:55 1767542155",
+        "indent_level": 0
+      },
+      {
+        "id": "46489122",
+        "author": "danielscrubs",
+        "text": "Last time I look into SoTA Bayesian deep learning, Bayesian output layers seems the most promising and practical. Is that still the case?",
+        "time": "2026-01-04T15:23:44 1767540224",
+        "indent_level": 0
+      },
+      {
+        "id": "46488814",
+        "author": "cubefox",
+        "text": "Found it interesting and engaging, but having a CS professor at Colombia putting their name to AI “slop” is a bit unnerving. If they are writing papers for work you would hope they would enjoy the process of thinking and writing (journaling) instead of using ChatGPT.",
+        "time": "2026-01-04T15:52:05 1767541925",
+        "indent_level": 0
+      },
+      {
+        "id": "46489075",
+        "author": "naasking",
+        "text": "Yeah. The article was clearly \"enhanced\" with an LLM. Too many inane \"this is not just A; this is B\" sentences. Also, \"why this matters\" as final subheading. Fail.",
+        "time": "2026-01-04T18:11:42 1767550302",
+        "indent_level": 1
+      },
+      {
+        "id": "46490550",
+        "author": "Analemma_",
+        "text": "Who cares if it was enhanced with LLMs? That's not determinative of whether the article is accurate and valuable.",
+        "time": "2026-01-04T18:18:39 1767550719",
+        "indent_level": 2
+      },
+      {
+        "id": "46490631",
+        "author": "naasking",
+        "text": "This is kind of a self-defeating argument. If the information is accurate and valuable, why bother with this blog post at all? The papers could speak for themselves.\nBut a lot of people are of the opinion that for many papers it helps to have a secondary publication where the author puts the work in the appropriate context. I’m trying to build a shared mental model with the author, to help me better understand the underlying work; that is harder to do when there’s no mind behind the words.",
+        "time": "2026-01-04T20:28:45 1767558525",
+        "indent_level": 3
+      },
+      {
+        "id": "46491852",
+        "author": "layer8",
+        "text": "Because articles are high level summaries of detailed work. What's self defeating about that?\n> that is harder to do when there’s no mind behind the words.\nPresumably the author read the text before publish and agreed with the summary. What's the problem exactly?",
+        "time": "2026-01-04T22:15:19 1767564919",
+        "indent_level": 4
+      },
+      {
+        "id": "46492882",
+        "author": "naasking",
+        "text": "The problem is that it’s distracting, lowers the quality of the writing, and one has to be cautious that random details might be wrong or misleading in a way that wouldn’t happen if it was completely self-authored.",
+        "time": "2026-01-04T22:25:13 1767565513",
+        "indent_level": 5
+      },
+      {
+        "id": "46492968",
+        "author": "layer8",
+        "text": "That's just not true, and even if LLMs did introduce more errors than humans, if you can't trust the author to proof read a summary article about his own papers, then you shouldn't trust the papers either.",
+        "time": "2026-01-04T22:28:33 1767565713",
+        "indent_level": 6
+      },
+      {
+        "id": "46493003",
+        "author": "naasking",
+        "text": "I agree with the latter. The fact that they use an LLM for the summary post without rewriting it in their own words already makes me not trust their papers.",
+        "time": "2026-01-05T14:27:21 1767623241",
+        "indent_level": 7
+      },
+      {
+        "id": "46499102",
+        "author": "binary132",
+        "text": "Great, and I think that's incorrect, and only getting more incorrect every year. I suppose that's all there is to say about that.",
+        "time": "2026-01-04T15:59:59 1767542399",
+        "indent_level": 8
+      },
+      {
+        "id": "46489171",
+        "author": "RevEng",
+        "text": "this was also my experience and unfortunately, if there were any grains of value to be winnowed from the slop, I lacked the patience to continue grinding at the mill.",
+        "time": "2026-01-04T17:08:54 1767546534",
+        "indent_level": 2
+      },
+      {
+        "id": "46489889",
+        "author": "layer8",
+        "text": "Writing the paper is a very small part of the research. It's entirely likely that - like many of their students - they love the research but hate writing papers. They are very different skill sets.",
+        "time": "2026-01-04T22:14:00 1767564840",
+        "indent_level": 1
+      },
+      {
+        "id": "46492864",
+        "author": "esafak",
+        "text": "One would think they’d care about the experience of people actually reading their papers.",
+        "time": "2026-01-04T16:07:49 1767542869",
+        "indent_level": 2
+      },
+      {
+        "id": "46489265",
+        "author": "jungturk",
+        "text": "Just give me an arXiv paper and I'll summarize it myself!",
+        "time": "2026-01-04T16:23:25 1767543805",
+        "indent_level": 1
+      },
+      {
+        "id": "46489441",
+        "author": "maccam912",
+        "text": "The three arxiv links being summarized are included in the article.",
+        "time": "2026-01-04T16:04:45 1767542685",
+        "indent_level": 2
+      },
+      {
+        "id": "46489226",
+        "author": "yloh",
+        "text": "Y'all, we need to get away from calling everything written by an LLM \"slop\". To me, slop is text for the purpose of padding content or getting clicks or whatever. Whether or not this was written in full or in part or 100% by a human who sounds like an LLM, the content here was interesting to think about and was organized and easy to read. Maybe I'm the only person reading past the word choice and grammar to extract the ideas from the article instead of playing a game of \"human or AI\" with every piece of writing I see.",
+        "time": "2026-01-04T16:33:14 1767544394",
+        "indent_level": 1
+      },
+      {
+        "id": "46489525",
+        "author": "tekne",
+        "text": "If something is not worth writing, it is not worth reading.",
+        "time": "2026-01-04T16:47:30 1767545250",
+        "indent_level": 2
+      },
+      {
+        "id": "46489670",
+        "author": "wrsh07",
+        "text": "On one hand, yes: expanding bullet points to slop makes things strictly worse.\nOn the\nother\nhand, if one uses AI but keeps content density\nconstant\n(e.g. grammar fixes for non-native speakers) or even\nnegative\n(compress this repetitive paragraph), I think it can be a useful net productivity boost.\nCurrent AI can't really\nadd\ninformation, but a lot of editing is\nsubtracting\n, and as long as you check the output for hallucinations (and prompt-engineer a\nlot\nsince models like to add) imo LLMs can be a subtraction-force-multiplier.\nIronically: anti-slop; or perhaps, fighting slop with slop.",
+        "time": "2026-01-04T17:20:52 1767547252",
+        "indent_level": 3
+      },
+      {
+        "id": "46490018",
+        "author": "naasking",
+        "text": "People are complaining about this article because of the lack of density",
+        "time": "2026-01-04T18:12:44 1767550364",
+        "indent_level": 4
+      },
+      {
+        "id": "46490559",
+        "author": "derbOac",
+        "text": "Well that's a completely wrong take.",
+        "time": "2026-01-04T17:30:16 1767547816",
+        "indent_level": 3
+      },
+      {
+        "id": "46490121",
+        "author": "wrsh07",
+        "text": "For whatever it's worth, I felt that regardless of whether it was written by a human, or AI, or AI-then-human, it was poorly written. I was going to dismiss it until I saw the links to the papers at the bottom, which I found pretty interesting and well worth the read.\nThe essay kind of works for me as an impressionistic context for the three papers, but without those three papers I think it's almost more confusing than it helps.",
+        "time": "2026-01-04T17:19:41 1767547181",
+        "indent_level": 2
+      },
+      {
+        "id": "46490005",
+        "author": "eli_gottlieb",
+        "text": "I would say that many of the sentences in this essay are not worth reading. Most of them are of the form described, eg not x but y\nEg\n> This suggests that the EM structure isn’t just an analogy — it’s the natural grain of the optimization landscape\nI don't care if someone uses llm. But it shows a lack of care to do it in this blatant way without noting it. Eg at work I'll often link prompt-response in docs as an appendix, but I will call out the provenance\nIf you find those sentences to be helpful, great! I find it decreases the signal in the article and makes me skim it. If you're wondering why people complain, it's because sharing a post intended to be skimmed without saying, hey you should skim this, is a little disrespectful of someone's time",
+        "time": "2026-01-05T05:56:20 1767592580",
+        "indent_level": 2
+      },
+      {
+        "id": "46495736",
+        "author": "dbacar",
+        "text": "> This suggests that the EM structure isn’t just an analogy — it’s the natural grain of the optimization landscape\nAs someone in the field, this means nothing, and I'm very suspicious of the article as a whole because it has so many sentences like this.",
+        "time": "2026-01-04T20:00:18 1767556818",
+        "indent_level": 3
+      },
+      {
+        "id": "46491604",
+        "author": "iamjs",
+        "text": "Just skimming, noticed lots of em dashes, interesting :).",
+        "time": "2026-01-04T21:12:13 1767561133",
+        "indent_level": 0
+      },
+      {
+        "id": "46492283",
+        "author": "dbacar",
+        "text": "It's so disappointing that this has become a meme. Lot's of people write with em-dashes. If you want to criticize the _writing_, then do so.",
+        "time": "2026-01-05T05:18:38 1767590318",
+        "indent_level": 1
+      },
+      {
+        "id": "46495573",
+        "author": "dbacar",
+        "text": "Writing is repetitive, making lots of general false claims out of personal feelings etc... I guess this is enough to criticize a chatbot output.",
+        "time": "2026-01-05T05:18:38 1767590318",
+        "indent_level": 2
+      }
+    ],
+    "content": null,
+    "ai_classification": {
+      "is_ai_related": true,
+      "confidence": 0.9,
+      "reasoning": "The title 'Attention Is Bayesian Inference' directly references 'Attention' (a core mechanism in AI/ML, especially transformers) and 'Bayesian Inference' (a statistical method widely used in machine learning)."
+    },
+    "article_summary": "The article proposes that attention mechanisms in neural networks can be interpreted through Bayesian inference. It suggests that attention weights act as a prior distribution, which is updated with new evidence (the input data) to form a posterior distribution. This Bayesian view frames attention as a process of probabilistic filtering, where the model allocates focus by calculating the relevance or likelihood of different input elements. The perspective aims to provide a more principled, statistical understanding of how attention selects and weights information, linking it to established probabilistic reasoning frameworks.",
+    "comment_summary": "Several commenters critique a paper claiming transformers perform Bayesian inference. They argue the experiments only show transformers can learn inference when it's the optimal solution, not that they inherently do so. Critics also note the research may be AI-assisted, reducing its credibility, and that key Bayesian elements like sampling are missing. While some find the ideas interesting, others view the evidence as insufficient for broader claims about LLMs, and the practical benefits remain unclear.",
+    "comment_sentiment": "mixed",
+    "comment_sentiment_score": 0.45,
+    "comment_sentiment_details": "Comments show a mix of skepticism and mild interest. Many express doubt about the paper's core claims, criticize its methodology or AI-assisted writing, and question its practical value. A few find the ideas interesting or engaging, but the overall tone is critical and unconvinced.",
+    "comment_topics": [
+      "Bayesian inference in transformers",
+      "AI-generated research content",
+      "transformer architecture analysis"
+    ],
+    "comment_agreement": {
+      "consensus": "disagree",
+      "agreement_score": 0.2,
+      "details": "All three commenters express skepticism or disagreement with the article's core claim that attention is Bayesian inference, focusing on methodological limitations and overgeneralization.",
+      "key_points": [
+        "Critique that the experimental setup may force any powerful model to appear Bayesian, not proving transformers intrinsically perform inference",
+        "Argument that the analogy ignores critical Bayesian components like sampling with detailed balance",
+        "Skepticism about the research quality and the extrapolation of findings to models like LLMs"
+      ]
+    }
+  }
+}

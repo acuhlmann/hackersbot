@@ -9,9 +9,7 @@ PROJECT=${PROJECT:-photogroup-215600}
 IMAGE_NAME=hackersbot
 CONTAINER_NAME=hackersbot-app
 
-# LLM configuration (can be set via environment variables)
-# If not set, will default to 'auto' which tries Ollama first, then Deepseek
-LLM_PROVIDER=${LLM_PROVIDER:-auto}
+# DeepSeek API key (required)
 DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
 
 echo "Deploying HackersBot app to GCP VM using Docker..."
@@ -167,12 +165,7 @@ DOCKER_RUN_CMD="docker run -d \
     -e BIND_ADDRESS=0.0.0.0 \
     -e PYTHONUNBUFFERED=1"
 
-# Add LLM provider environment variable if set
-if [ -n "$LLM_PROVIDER" ]; then
-    DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e LLM_PROVIDER=$LLM_PROVIDER"
-fi
-
-# Add Deepseek API key if set (for cloud LLM)
+# Add Deepseek API key
 if [ -n "$DEEPSEEK_API_KEY" ]; then
     DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY"
 fi

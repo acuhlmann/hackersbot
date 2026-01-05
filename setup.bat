@@ -49,10 +49,8 @@ echo Setup complete!
 echo ========================================
 echo.
 echo Next steps:
-echo 1. Make sure Ollama is running
-echo 2. Download Qwen models: ollama pull qwen2.5:7b
-echo 3. Activate venv: venv\Scripts\activate
-echo 4. Run: python -m src.main --top-n 3
+echo 1. Edit .env and add your DEEPSEEK_API_KEY
+echo 2. Activate venv: venv\Scripts\activate
+echo 3. Run: python -m src.main --top-n 3
 echo.
 pause
-

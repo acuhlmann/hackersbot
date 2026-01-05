@@ -2,10 +2,20 @@
 
 import os
 import json
+from pathlib import Path
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env file (not .env.example - that's just a template)
+# In production (GitHub Actions, GCP VM), environment variables are injected directly
+# so .env file won't exist and load_dotenv() will silently continue
+try:
+    # Find project root (go up from src/models/ to project root)
+    project_root = Path(__file__).parent.parent.parent.resolve()
+    load_dotenv(dotenv_path=str(project_root / '.env'))  # Explicitly load from project root
+except Exception:
+    # If .env file has issues, continue - production uses injected env vars
+    pass
 
 
 class DeepseekClient:

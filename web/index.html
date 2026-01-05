@@ -117,8 +117,15 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            white-space: nowrap; /* prevent height changes from wrapping */
-            min-height: 40px;    /* keep stable height while loading */
+            white-space: nowrap;
+            height: 40px;
+            min-height: 40px;
+            max-height: 40px;
+            box-sizing: border-box;
+            overflow: hidden;
+            line-height: 1;
+            flex-shrink: 0;
+            flex-grow: 0;
         }
 
         .refresh-button:hover:not(:disabled) {
@@ -135,11 +142,21 @@
         .refresh-button.loading {
             position: relative;
             color: transparent;
+            height: 40px !important;
+            min-height: 40px !important;
+            max-height: 40px !important;
+        }
+        
+        .refresh-button.loading > * {
+            visibility: hidden;
         }
 
         .refresh-button.loading::after {
             content: '';
             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 16px;
             height: 16px;
             border: 2px solid var(--accent-orange);
@@ -667,6 +684,214 @@
             opacity: 0.8;
         }
 
+        /* Tab navigation */
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-orange);
+            border-bottom-color: var(--accent-orange);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Ad-hoc URL input section */
+        .adhoc-input-section {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .adhoc-input-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .adhoc-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .adhoc-url-input {
+            flex: 1;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .adhoc-url-input:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .adhoc-url-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .adhoc-url-input.invalid {
+            border-color: var(--accent-orange);
+        }
+
+        .adhoc-url-input.valid {
+            border-color: var(--accent-green);
+        }
+
+        .adhoc-submit-btn {
+            padding: 0.6rem 1rem;
+            background: var(--accent-orange);
+            border: none;
+            border-radius: 6px;
+            color: var(--bg-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            height: 38px;
+            min-height: 38px;
+            max-height: 38px;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+
+        .adhoc-submit-btn:hover:not(:disabled) {
+            background: #ff9070;
+        }
+
+        .adhoc-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .adhoc-submit-btn.loading {
+            position: relative;
+            color: transparent;
+            height: 38px !important;
+            min-height: 38px !important;
+            max-height: 38px !important;
+        }
+        
+        .adhoc-submit-btn.loading > * {
+            visibility: hidden;
+        }
+
+        .adhoc-submit-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--bg-primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .adhoc-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .adhoc-status.error {
+            color: var(--accent-orange);
+        }
+
+        .adhoc-status.success {
+            color: var(--accent-green);
+        }
+
+        /* Ad-hoc summary item */
+        .adhoc-item {
+            display: block;
+            padding: 0.85rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .adhoc-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .adhoc-item.active {
+            background: var(--bg-tertiary);
+            border-left-color: var(--accent-purple);
+        }
+
+        .adhoc-item .title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .adhoc-item .meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .adhoc-item .item-id {
+            color: var(--accent-purple);
+        }
+
         /* Loading state */
         .loading {
             display: flex;
@@ -768,27 +993,65 @@
                 <h1>hackersbot</h1>
                 <p>AI-powered HN summaries</p>
             </div>
-            <div class="refresh-section">
-                <button id="refreshButton" class="refresh-button" onclick="triggerRefresh()">
-                    🔄 Refresh Summary
-                </button>
-                <div id="refreshStatus" class="refresh-status"></div>
-                <div id="refreshStream" class="refresh-stream hidden">
-                    <div class="refresh-stream-title">
-                        <span>Live refresh log</span>
-                        <span class="refresh-stream-actions">
-                            <button class="refresh-stream-btn" onclick="clearRefreshLog()">Clear</button>
-                            <button class="refresh-stream-btn" onclick="toggleRefreshLog()">Hide</button>
-                        </span>
+            
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="switchTab('daily')">Daily</button>
+                <button class="tab-btn" onclick="switchTab('single')">Single Article</button>
+            </div>
+            
+            <!-- Daily Summaries Tab -->
+            <div id="dailyTab" class="tab-content active">
+                <div class="refresh-section">
+                    <button id="refreshButton" class="refresh-button" onclick="triggerRefresh()">
+                        🔄 Refresh Today's Summary
+                    </button>
+                    <div id="refreshStatus" class="refresh-status"></div>
+                    <div id="refreshStream" class="refresh-stream hidden">
+                        <div class="refresh-stream-title">
+                            <span>Live refresh log</span>
+                            <span class="refresh-stream-actions">
+                                <button class="refresh-stream-btn" onclick="clearRefreshLog()">Clear</button>
+                                <button class="refresh-stream-btn" onclick="toggleRefreshLog()">Hide</button>
+                            </span>
+                        </div>
+                        <pre id="refreshLog" class="refresh-log"></pre>
                     </div>
-                    <pre id="refreshLog" class="refresh-log"></pre>
+                </div>
+                <div class="summary-list">
+                    <h2>Historical Summaries</h2>
+                    <div id="summaryList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="summary-list">
-                <h2>Historical Summaries</h2>
-                <div id="summaryList">
-                    <div class="loading">
-                        <div class="spinner"></div>
+            
+            <!-- Single Article Tab -->
+            <div id="singleTab" class="tab-content">
+                <div class="adhoc-input-section">
+                    <label class="adhoc-input-label">Summarize a single HN article</label>
+                    <div class="adhoc-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="adhocUrlInput" 
+                            class="adhoc-url-input" 
+                            placeholder="https://news.ycombinator.com/item?id=..."
+                            oninput="validateAdhocUrl()"
+                        >
+                        <button id="adhocSubmitBtn" class="adhoc-submit-btn" onclick="submitAdhocUrl()" disabled>
+                            Go
+                        </button>
+                    </div>
+                    <div id="adhocStatus" class="adhoc-status"></div>
+                </div>
+                <div class="summary-list">
+                    <h2>Summarized Articles</h2>
+                    <div id="adhocList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1394,8 +1657,297 @@
             }
         }
 
+        // ========================
+        // Tab Switching
+        // ========================
+        let currentTab = 'daily';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab === 'daily' ? 'dailyTab' : 'singleTab').classList.add('active');
+            
+            // Show appropriate content in main area
+            if (tab === 'daily') {
+                // Restore daily summary view
+                if (summaries.length > 0 && currentSummary) {
+                    // Keep current view
+                } else if (summaries.length > 0) {
+                    loadSummary(summaries[0].jsonFile);
+                }
+            } else {
+                // Load adhoc summaries and show appropriate view
+                loadAdhocSummaries();
+                if (adhocSummaries.length > 0 && !currentAdhocSummary) {
+                    loadAdhocSummary(adhocSummaries[0].jsonFile);
+                } else if (adhocSummaries.length === 0) {
+                    showAdhocEmptyState();
+                }
+            }
+        }
+
+        // ========================
+        // Ad-hoc Article Summarization
+        // ========================
+        const HN_URL_PATTERN = /^https?:\/\/(www\.)?news\.ycombinator\.com\/item\?id=(\d+)$/;
+        let adhocSummaries = [];
+        let currentAdhocSummary = null;
+
+        function validateAdhocUrl() {
+            const input = document.getElementById('adhocUrlInput');
+            const submitBtn = document.getElementById('adhocSubmitBtn');
+            const statusEl = document.getElementById('adhocStatus');
+            const url = input.value.trim();
+            
+            if (!url) {
+                input.classList.remove('valid', 'invalid');
+                submitBtn.disabled = true;
+                statusEl.textContent = '';
+                return false;
+            }
+            
+            const isValid = HN_URL_PATTERN.test(url);
+            
+            input.classList.toggle('valid', isValid);
+            input.classList.toggle('invalid', !isValid);
+            submitBtn.disabled = !isValid;
+            
+            if (!isValid && url.length > 10) {
+                statusEl.textContent = 'Must be a valid HN URL (news.ycombinator.com/item?id=...)';
+                statusEl.className = 'adhoc-status error';
+            } else {
+                statusEl.textContent = '';
+            }
+            
+            return isValid;
+        }
+
+        async function submitAdhocUrl() {
+            const input = document.getElementById('adhocUrlInput');
+            const submitBtn = document.getElementById('adhocSubmitBtn');
+            const statusEl = document.getElementById('adhocStatus');
+            const url = input.value.trim();
+            
+            if (!validateAdhocUrl()) return;
+            
+            // Disable and show loading
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            statusEl.textContent = 'Summarizing article...';
+            statusEl.className = 'adhoc-status';
+            
+            try {
+                const response = await fetch('/api/summarize-single', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    statusEl.textContent = 'Article summarized successfully!';
+                    statusEl.className = 'adhoc-status success';
+                    
+                    // Clear input
+                    input.value = '';
+                    input.classList.remove('valid', 'invalid');
+                    
+                    // Reload adhoc list and show the new summary
+                    await loadAdhocSummaries();
+                    
+                    // Display the new summary
+                    if (data.data) {
+                        currentAdhocSummary = data.data;
+                        renderAdhocArticle(data.data);
+                    }
+                } else {
+                    statusEl.textContent = data.error || 'Failed to summarize article';
+                    statusEl.className = 'adhoc-status error';
+                }
+            } catch (error) {
+                statusEl.textContent = `Error: ${error.message}`;
+                statusEl.className = 'adhoc-status error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+                validateAdhocUrl(); // Re-validate to set proper button state
+            }
+        }
+
+        async function loadAdhocSummaries() {
+            try {
+                const response = await fetch('/api/adhoc-summaries');
+                if (response.ok) {
+                    adhocSummaries = await response.json();
+                } else {
+                    adhocSummaries = [];
+                }
+                renderAdhocList();
+            } catch (error) {
+                console.error('Failed to load adhoc summaries:', error);
+                adhocSummaries = [];
+                renderAdhocList();
+            }
+        }
+
+        function renderAdhocList() {
+            const listEl = document.getElementById('adhocList');
+            
+            if (adhocSummaries.length === 0) {
+                listEl.innerHTML = '<p style="padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">No single articles summarized yet. Paste a HN URL above to get started.</p>';
+                return;
+            }
+
+            listEl.innerHTML = adhocSummaries.map((s, index) => {
+                const generatedTime = s.generatedAt ? formatRefreshTime(s.generatedAt) : null;
+                return `
+                <div class="adhoc-item ${index === 0 ? 'active' : ''}" data-file="${s.jsonFile}" onclick="loadAdhocSummary('${s.jsonFile}', this)">
+                    <div class="title">${escapeHtml(s.title)}</div>
+                    <div class="meta">
+                        <span class="item-id">#${s.itemId}</span>
+                        <span>${s.points || 0} pts</span>
+                        <span>${s.commentCount || 0} comments</span>
+                        ${generatedTime ? `<span>${generatedTime}</span>` : ''}
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        async function loadAdhocSummary(filename, element) {
+            // Update active state
+            document.querySelectorAll('.adhoc-item').forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`${SUMMARIES_PATH}/adhoc/${filename}`);
+                if (!response.ok) throw new Error('Failed to load summary');
+                
+                const data = await response.json();
+                currentAdhocSummary = data;
+                renderAdhocArticle(data);
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <h2>Failed to load summary</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderAdhocArticle(data) {
+            const mainContent = document.getElementById('mainContent');
+            const article = data.article;
+            
+            if (!article) {
+                mainContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <h2>Invalid summary data</h2>
+                        <p>The summary file appears to be corrupted.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const isAi = isAiRelated(article);
+            const topics = article.comment_topics || [];
+            const generatedAt = data.generated_at ? formatGeneratedAt(data.generated_at) : null;
+
+            mainContent.innerHTML = `
+                <header class="summary-header">
+                    <div class="timestamp">Single Article Summary</div>
+                    <h1>${escapeHtml(article.title)}</h1>
+                    <div class="summary-meta">
+                        <span class="meta-item">Points: <span>${article.points || 0}</span></span>
+                        <span class="meta-item">Comments: <span>${article.comment_count || 0}</span></span>
+                        <span class="meta-item">Provider: <span>${data.metadata?.llm_provider || 'unknown'}</span></span>
+                        ${isAi ? '<span class="meta-item">AI Topic</span>' : ''}
+                    </div>
+                    ${generatedAt ? `<div class="generated-at">Summarized: ${generatedAt}</div>` : ''}
+                </header>
+                
+                <article class="article">
+                    <div class="article-header">
+                        <div class="article-rank">HN #${data.item_id || article.id}</div>
+                        ${isAi ? '<span class="article-ai-tag">⚡ AI/ML Topic</span>' : ''}
+                    </div>
+                    <h2><a href="${article.url}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a></h2>
+                    <div class="article-stats">
+                        <span class="stat"><strong>${article.points}</strong> points</span>
+                        <span class="stat">by <strong>${escapeHtml(article.author)}</strong></span>
+                        <span class="stat"><strong>${article.comment_count}</strong> comments</span>
+                    </div>
+                    
+                    <div class="article-summary">
+                        <h3>Summary</h3>
+                        <p id="adhoc-article-summary">${escapeHtml(article.article_summary || 'No summary available')}</p>
+                        <button class="expand-btn" onclick="toggleExpand('adhoc-article-summary', this)">Show more</button>
+                    </div>
+                    
+                    ${article.comment_summary ? `
+                        <div class="comment-summary">
+                            <h3>Discussion Highlights</h3>
+                            <p id="adhoc-article-discussion">${escapeHtml(article.comment_summary)}</p>
+                            <button class="expand-btn" onclick="toggleExpand('adhoc-article-discussion', this)">Show more</button>
+                            
+                            ${renderAgreementSection(article)}
+                            
+                            ${topics.length > 0 ? `
+                                <div class="topics">
+                                    ${topics.map(t => `<span class="topic">${escapeHtml(t)}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <a href="${data.hn_url || article.comment_url}" target="_blank" rel="noopener" class="hn-link">
+                        → View on Hacker News
+                    </a>
+                </article>
+            `;
+        }
+
+        function showAdhocEmptyState() {
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">🔗</div>
+                    <h2>Summarize any HN article</h2>
+                    <p>Paste a Hacker News URL in the sidebar to get an AI-powered summary</p>
+                </div>
+            `;
+        }
+
+        // Handle Enter key in adhoc input
+        document.addEventListener('DOMContentLoaded', () => {
+            const adhocInput = document.getElementById('adhocUrlInput');
+            if (adhocInput) {
+                adhocInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && validateAdhocUrl()) {
+                        submitAdhocUrl();
+                    }
+                });
+            }
+        });
+
         // Start the app
         init();
+        loadAdhocSummaries();
         
         // Check refresh status on load and periodically
         checkRefreshStatus();
