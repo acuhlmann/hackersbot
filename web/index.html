@@ -1370,22 +1370,27 @@
                         }
                     }, 2000); // Check every 2 seconds
                 } else {
+                    // API returned error - don't show stream panel since refresh didn't start
                     statusEl.textContent = data.error || 'Failed to start refresh';
                     statusEl.className = 'refresh-status error';
                     button.disabled = false;
                     button.classList.remove('loading');
-                    showRefreshStream();
-                    appendRefreshLog(`✖ Refresh failed to start: ${data.error || 'unknown error'}`);
-                    stopRefreshStream();
+                    // Don't show refresh stream - nothing to stream when refresh fails to start
                 }
             } catch (error) {
-                statusEl.textContent = `Error: ${error.message}`;
+                // Network errors (connection refused, etc.) - don't show stream panel
+                // since there's no server to stream from
+                const isConnectionError = error.message.includes('Failed to fetch') || 
+                                          error.message.includes('NetworkError') ||
+                                          error.message.includes('Connection refused');
+                const friendlyMessage = isConnectionError 
+                    ? 'Server unavailable. Please ensure the server is running.'
+                    : `Refresh failed: ${error.message}`;
+                statusEl.textContent = friendlyMessage;
                 statusEl.className = 'refresh-status error';
                 button.disabled = false;
                 button.classList.remove('loading');
-                showRefreshStream();
-                appendRefreshLog(`✖ Network error: ${error.message}`);
-                stopRefreshStream();
+                // Don't show refresh stream on connection errors - nothing to stream
             }
         }
 
