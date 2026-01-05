@@ -162,6 +162,67 @@
             color: var(--accent-green);
         }
 
+        .refresh-stream {
+            margin-top: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .refresh-stream.hidden {
+            display: none;
+        }
+
+        .refresh-stream.collapsed .refresh-log {
+            display: none;
+        }
+
+        .refresh-stream-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .refresh-stream-actions {
+            display: inline-flex;
+            gap: 0.4rem;
+        }
+
+        .refresh-stream-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.15rem 0.4rem;
+            cursor: pointer;
+        }
+
+        .refresh-stream-btn:hover {
+            border-color: var(--text-muted);
+        }
+
+        .refresh-log {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            padding: 0.6rem;
+            max-height: 180px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
         .summary-list {
             flex: 1;
             overflow-y: auto;
@@ -710,6 +771,16 @@
                     🔄 Refresh Summary
                 </button>
                 <div id="refreshStatus" class="refresh-status"></div>
+                <div id="refreshStream" class="refresh-stream hidden">
+                    <div class="refresh-stream-title">
+                        <span>Live refresh log</span>
+                        <span class="refresh-stream-actions">
+                            <button class="refresh-stream-btn" onclick="clearRefreshLog()">Clear</button>
+                            <button class="refresh-stream-btn" onclick="toggleRefreshLog()">Hide</button>
+                        </span>
+                    </div>
+                    <pre id="refreshLog" class="refresh-log"></pre>
+                </div>
             </div>
             <div class="summary-list">
                 <h2>Historical Summaries</h2>
@@ -1096,6 +1167,109 @@
 
         // Refresh functionality
         let refreshStatusCheckInterval = null;
+        let refreshEventSource = null;
+        let refreshStreamStarted = false;
+        let refreshLogHidden = false;
+
+        function showRefreshStream() {
+            const streamEl = document.getElementById('refreshStream');
+            streamEl.classList.remove('hidden');
+            streamEl.classList.remove('collapsed');
+            refreshLogHidden = false;
+            const toggleBtn = streamEl.querySelector('.refresh-stream-actions button:last-child');
+            if (toggleBtn) toggleBtn.textContent = 'Hide';
+        }
+
+        function hideRefreshStream() {
+            const streamEl = document.getElementById('refreshStream');
+            streamEl.classList.add('collapsed');
+            refreshLogHidden = true;
+        }
+
+        function toggleRefreshLog() {
+            const streamEl = document.getElementById('refreshStream');
+            const toggleBtn = streamEl.querySelector('.refresh-stream-actions button:last-child');
+            if (refreshLogHidden) {
+                showRefreshStream();
+                if (toggleBtn) toggleBtn.textContent = 'Hide';
+            } else {
+                hideRefreshStream();
+                if (toggleBtn) toggleBtn.textContent = 'Show';
+            }
+        }
+
+        function clearRefreshLog() {
+            const logEl = document.getElementById('refreshLog');
+            if (logEl) logEl.textContent = '';
+        }
+
+        function appendRefreshLog(line) {
+            const logEl = document.getElementById('refreshLog');
+            if (!logEl) return;
+            const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            logEl.textContent += `[${ts}] ${line}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function stopRefreshStream() {
+            if (refreshEventSource) {
+                refreshEventSource.close();
+                refreshEventSource = null;
+            }
+            refreshStreamStarted = false;
+        }
+
+        function startRefreshStream() {
+            if (refreshStreamStarted) return;
+            refreshStreamStarted = true;
+            showRefreshStream();
+            clearRefreshLog();
+
+            appendRefreshLog('Connecting to live refresh stream...');
+
+            refreshEventSource = new EventSource('/api/refresh/stream');
+
+            const onAnyEvent = (label, e) => {
+                try {
+                    const payload = JSON.parse(e.data || '{}');
+                    const msg = payload.message || payload.error || '';
+                    if (label === 'llm_request') {
+                        appendRefreshLog(`LLM → (${payload.provider || 'llm'}:${payload.role || 'invoke'}) prompt: ${payload.prompt_excerpt || ''}`);
+                    } else if (label === 'llm_response') {
+                        appendRefreshLog(`LLM ← (${payload.provider || 'llm'}:${payload.role || 'invoke'}) ${payload.elapsed_ms || 0}ms: ${payload.response_excerpt || ''}`);
+                    } else if (label === 'llm_call') {
+                        appendRefreshLog(`LLM → (${payload.provider || 'llm'}) ${payload.operation || 'call'}: ${payload.input_excerpt || payload.title || ''}`);
+                    } else if (label === 'llm_result') {
+                        appendRefreshLog(`LLM ← (${payload.provider || 'llm'}) ${payload.operation || 'result'} ${payload.elapsed_ms || 0}ms: ${payload.output_excerpt || ''}`);
+                    } else if (label === 'llm_error') {
+                        appendRefreshLog(`LLM ✖ (${payload.provider || 'llm'}) error: ${payload.error || 'unknown error'}`);
+                    } else if (label === 'refresh_error') {
+                        appendRefreshLog(`✖ ${msg || 'Refresh failed'}`);
+                        stopRefreshStream();
+                    } else if (label === 'done') {
+                        appendRefreshLog(`✓ ${msg || 'Refresh complete'}`);
+                        stopRefreshStream();
+                    } else if (label === 'status') {
+                        appendRefreshLog(`Stream status: ${payload.message || 'connected'}`);
+                    } else {
+                        appendRefreshLog(msg || JSON.stringify(payload));
+                    }
+                } catch (err) {
+                    appendRefreshLog(`${label}: ${e.data}`);
+                }
+            };
+
+            // App-level events
+            ['status', 'log', 'done', 'refresh_error', 'llm_request', 'llm_response', 'llm_call', 'llm_result', 'llm_error'].forEach((evt) => {
+                refreshEventSource.addEventListener(evt, (e) => onAnyEvent(evt, e));
+            });
+
+            // Connection errors
+            refreshEventSource.onerror = () => {
+                appendRefreshLog('Stream disconnected.');
+                stopRefreshStream();
+            };
+        }
 
         async function checkRefreshStatus() {
             try {
@@ -1142,6 +1316,7 @@
             button.classList.add('loading');
             statusEl.textContent = 'Starting refresh...';
             statusEl.className = 'refresh-status';
+            stopRefreshStream();
             
             try {
                 const response = await fetch('/api/refresh', {
@@ -1166,7 +1341,12 @@
                         const statusResponse = await fetch('/api/status');
                         if (statusResponse.ok) {
                             const status = await statusResponse.json();
+                            // Start stream once we see refresh actually in progress.
+                            if (status.in_progress && !refreshStreamStarted) {
+                                startRefreshStream();
+                            }
                             if (!status.in_progress) {
+                                stopRefreshStream();
                                 // Refresh complete, reload summaries
                                 clearInterval(refreshStatusCheckInterval);
                                 refreshStatusCheckInterval = null;
@@ -1194,12 +1374,14 @@
                     statusEl.className = 'refresh-status error';
                     button.disabled = false;
                     button.classList.remove('loading');
+                    stopRefreshStream();
                 }
             } catch (error) {
                 statusEl.textContent = `Error: ${error.message}`;
                 statusEl.className = 'refresh-status error';
                 button.disabled = false;
                 button.classList.remove('loading');
+                stopRefreshStream();
             }
         }
 
