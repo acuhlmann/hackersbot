@@ -100,8 +100,8 @@ class TestMobileCss:
         """Test that the refresh button exists in the HTML."""
         assert 'id="refreshButton"' in index_html, \
             "Refresh button should exist with id='refreshButton'"
-        assert 'Refresh Summary' in index_html, \
-            "Refresh button should have 'Refresh Summary' text"
+        assert "Refresh Today's Summary" in index_html, \
+            "Refresh button should have 'Refresh Today's Summary' text"
     
     def test_refresh_status_element_exists(self, index_html):
         """Test that refresh status element exists."""

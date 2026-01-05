@@ -18,7 +18,7 @@ class TestSummarizerAgent:
         """Test SummarizerAgent creates LLMClient if not provided"""
         with patch('src.agents.summarizer_agent.get_llm_client') as mock_get_client:
             agent = SummarizerAgent()
-            mock_get_client.assert_called_once_with(provider=None)
+            mock_get_client.assert_called_once_with()
     
     def test_summarizer_initialization_custom_client(self, mock_llm_client):
         """Test SummarizerAgent uses provided LLMClient"""
