@@ -8,9 +8,10 @@ import sys
 import json
 import threading
 import shutil
+import queue
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent.resolve()
@@ -37,6 +38,32 @@ BIND_ADDRESS = os.environ.get('BIND_ADDRESS', '0.0.0.0')
 refresh_lock = threading.Lock()
 refresh_in_progress = False
 
+# Broadcast stream state (SSE subscribers)
+subscribers_lock = threading.Lock()
+refresh_subscribers: List["queue.Queue[Dict[str, Any]]"] = []
+
+
+def _broadcast_refresh_event(payload: Dict[str, Any]) -> None:
+    """Fan-out refresh progress events to all active subscribers."""
+    with subscribers_lock:
+        subscribers = list(refresh_subscribers)
+    if not subscribers:
+        return
+    for q in subscribers:
+        try:
+            q.put_nowait(payload)
+        except queue.Full:
+            # Drop oldest to make room, then try once more.
+            try:
+                _ = q.get_nowait()
+            except queue.Empty:
+                pass
+            try:
+                q.put_nowait(payload)
+            except queue.Full:
+                # If still full, drop this event.
+                pass
+
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     """Custom handler to serve files at root path with proper routing."""
@@ -53,6 +80,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/status':
             # API endpoint for refresh status
             self.handle_status()
+        elif path == '/api/refresh/stream':
+            # SSE stream of refresh progress events
+            self.handle_refresh_stream()
         elif path.startswith('/summaries/'):
             # Serve files from summaries directory
             file_path = PROJECT_ROOT / path[1:]  # Remove leading /
@@ -237,8 +267,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     
                     # Initialize components
                     print(f"[REFRESH] Initializing LLM client with provider: {provider}", flush=True)
-                    llm_client = get_llm_client(provider=provider)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": f"Initializing LLM client (provider={provider})"})
+                    llm_client = get_llm_client(
+                        provider=provider,
+                        event_handler=_broadcast_refresh_event,
+                    )
                     print(f"[REFRESH] LLM client initialized: {type(llm_client).__name__}", flush=True)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": f"LLM client ready: {type(llm_client).__name__}"})
                     scraper = ScraperAgent()
                     filter_agent = FilterAgent(llm_client=llm_client)
                     summarizer = SummarizerAgent(llm_client=llm_client)
@@ -246,19 +281,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     
                     # Scrape articles
                     print(f"[REFRESH] Scraping top {top_n} articles from Hacker News...", flush=True)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": f"Scraping top {top_n} Hacker News articles..."})
                     articles = scraper.scrape_articles_with_comments(top_n)
                     if not articles:
                         raise Exception("No articles found")
                     print(f"[REFRESH] Scraped {len(articles)} articles", flush=True)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": f"Scraped {len(articles)} articles"})
                     
                     # Classify articles (but don't filter)
                     print(f"[REFRESH] Classifying articles...", flush=True)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": "Classifying articles (AI-related or not)..."})
                     articles = filter_agent.batch_classify(articles)
                     
                     # Summarize articles - THIS IS WHERE LLM CALLS HAPPEN
                     print(f"[REFRESH] Summarizing articles with LLM (this may take a while)...", flush=True)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": "Summarizing articles (LLM)…"})
                     articles = summarizer.summarize_articles(articles, include_comments=True)
                     print(f"[REFRESH] Summarization complete. Generated summaries for {len(articles)} articles.", flush=True)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": f"Summarization complete ({len(articles)} articles)"})
                     
                     # Prepare metadata
                     metadata = {
@@ -270,6 +310,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     }
                     
                     # Save to outputs/ directory (date-only format)
+                    _broadcast_refresh_event({"type": "log", "level": "info", "message": "Saving summary files..."})
                     md_content = Formatter.format_markdown(articles, metadata)
                     md_path = storage.save_markdown(md_content, use_date_only=True)
                     
@@ -284,9 +325,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     
                     # Regenerate index
                     generate_index(PROJECT_ROOT)
+                    _broadcast_refresh_event({"type": "done", "level": "info", "message": "Refresh complete"})
                     
                 except Exception as e:
                     print(f"[REFRESH ERROR] Error during refresh: {e}", flush=True)
+                    _broadcast_refresh_event({"type": "refresh_error", "level": "error", "message": f"Refresh failed: {e}"})
                     import traceback
                     print("[REFRESH ERROR] Full traceback:", flush=True)
                     traceback.print_exc()
@@ -296,6 +339,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     with refresh_lock:
                         global refresh_in_progress
                         refresh_in_progress = False
+                        _broadcast_refresh_event({"type": "log", "level": "info", "message": "Refresh flag cleared"})
             
             # Start refresh in background thread
             refresh_thread = threading.Thread(target=run_refresh, daemon=True)
@@ -314,6 +358,63 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "success": False,
                 "error": str(e)
             }, status_code=500)
+
+    def handle_refresh_stream(self):
+        """Handle GET /api/refresh/stream - stream refresh progress (SSE)."""
+        # Create per-connection queue
+        q: "queue.Queue[Dict[str, Any]]" = queue.Queue(maxsize=200)
+        with subscribers_lock:
+            refresh_subscribers.append(q)
+
+        try:
+            self.send_response(200)
+            self.send_header('Content-type', 'text/event-stream')
+            self.send_header('Cache-Control', 'no-cache')
+            self.send_header('Connection', 'keep-alive')
+            self.end_headers()
+
+            # Initial snapshot
+            initial = {
+                "type": "status",
+                "in_progress": refresh_in_progress,
+                "message": "connected",
+            }
+            self._sse_send(initial, event_name="status")
+
+            # Stream loop
+            while True:
+                try:
+                    payload = q.get(timeout=15)
+                except queue.Empty:
+                    # Heartbeat to keep intermediaries from buffering/closing.
+                    try:
+                        self.wfile.write(b": heartbeat\n\n")
+                        self.wfile.flush()
+                    except (BrokenPipeError, ConnectionResetError):
+                        break
+                    continue
+
+                event_name = str(payload.get("type") or "log")
+                self._sse_send(payload, event_name=event_name)
+
+                if event_name in ("done", "refresh_error"):
+                    # End the stream on completion/failure.
+                    break
+
+        finally:
+            with subscribers_lock:
+                if q in refresh_subscribers:
+                    refresh_subscribers.remove(q)
+
+    def _sse_send(self, payload: Dict[str, Any], *, event_name: str) -> None:
+        """Send one SSE message."""
+        try:
+            data = json.dumps(payload, ensure_ascii=False)
+            msg = f"event: {event_name}\ndata: {data}\n\n"
+            self.wfile.write(msg.encode("utf-8"))
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            raise
     
     def log_message(self, format, *args):
         # Quieter logging - only show errors
@@ -344,7 +445,8 @@ def main():
     # Use allow_reuse_address to avoid port conflicts
     socketserver.TCPServer.allow_reuse_address = True
     
-    with socketserver.TCPServer((BIND_ADDRESS, port), Handler) as httpd:
+    # Use a threaded server so SSE refresh streams don't block other requests.
+    with socketserver.ThreadingTCPServer((BIND_ADDRESS, port), Handler) as httpd:
         # Display appropriate URL based on bind address
         display_host = "localhost" if BIND_ADDRESS == "0.0.0.0" else BIND_ADDRESS
         url = f"http://{display_host}:{port}/"
