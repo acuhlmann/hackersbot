@@ -219,118 +219,85 @@ class TestRefreshUI:
     
     def test_refresh_status_updates_on_completion(self, page, test_server):
         """Test that refresh status updates when refresh completes."""
-        # Create a mock summary file for today to test with
-        today = datetime.now().strftime("%Y-%m-%d")
-        summaries_dir = PROJECT_ROOT / "summaries"
-        summaries_dir.mkdir(exist_ok=True)
+        # NOTE: This is a UI behavior test. It must not write into the real
+        # summaries/ folder (that folder is used by the app and deployments).
+        #
+        # Mock the refresh endpoint
+        refresh_called = {"count": 0}
         
-        # Create a test summary file
-        test_summary = {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-            "metadata": {
-                "articles_count": 3,
-                "llm_provider": "test"
-            },
-            "articles": [
-                {
-                    "rank": 1,
-                    "title": "Test Article 1",
-                    "url": "https://example.com/1",
-                    "points": 100,
-                    "author": "testuser",
-                    "comment_count": 10
-                }
-            ]
-        }
+        def handle_refresh(route):
+            if '/api/refresh' in route.request.url:
+                refresh_called["count"] += 1
+                route.fulfill(
+                    status=200,
+                    content_type='application/json',
+                    body=json.dumps({"success": True, "message": "Refresh started"})
+                )
+            else:
+                route.continue_()
         
-        test_json_file = summaries_dir / f"{today}_summary.json"
-        original_exists = test_json_file.exists()
+        page.route('**/api/refresh', handle_refresh)
         
-        try:
-            with open(test_json_file, 'w') as f:
-                json.dump(test_summary, f)
-            
-            # Mock the refresh endpoint
-            refresh_called = {"count": 0}
-            
-            def handle_refresh(route):
-                if '/api/refresh' in route.request.url:
-                    refresh_called["count"] += 1
+        # Mock status endpoint to simulate refresh lifecycle
+        status_call_count = {"count": 0}
+        
+        def handle_status(route):
+            if '/api/status' in route.request.url:
+                status_call_count["count"] += 1
+                # First 3 calls: in progress
+                if status_call_count["count"] <= 3:
                     route.fulfill(
                         status=200,
                         content_type='application/json',
-                        body=json.dumps({"success": True, "message": "Refresh started"})
+                        body=json.dumps({
+                            "in_progress": True,
+                            "can_refresh": False,
+                            "last_refresh": None
+                        })
                     )
                 else:
-                    route.continue_()
-            
-            page.route('**/api/refresh', handle_refresh)
-            
-            # Mock status endpoint to simulate refresh lifecycle
-            status_call_count = {"count": 0}
-            
-            def handle_status(route):
-                if '/api/status' in route.request.url:
-                    status_call_count["count"] += 1
-                    # First 3 calls: in progress
-                    if status_call_count["count"] <= 3:
-                        route.fulfill(
-                            status=200,
-                            content_type='application/json',
-                            body=json.dumps({
-                                "in_progress": True,
-                                "can_refresh": False,
-                                "last_refresh": None
-                            })
-                        )
-                    else:
-                        # After that: complete
-                        route.fulfill(
-                            status=200,
-                            content_type='application/json',
-                            body=json.dumps({
-                                "in_progress": False,
-                                "can_refresh": True,
-                                "last_refresh": datetime.now(timezone.utc).isoformat()
-                            })
-                        )
-                else:
-                    route.continue_()
-            
-            page.route('**/api/status', handle_status)
-            
-            # Reload page to get fresh state
-            page.reload()
-            page.wait_for_selector('#refreshButton', timeout=5000)
-            
-            # Click refresh button
-            refresh_button = page.locator('#refreshButton')
-            refresh_button.click()
-            
-            # Wait for status to show refresh started
-            refresh_status = page.locator('#refreshStatus')
-            refresh_status.wait_for(state='visible', timeout=2000)
-            
-            # Wait for refresh to complete (status polling happens every 2 seconds)
-            # We'll wait up to 10 seconds for the status to update
-            max_wait = 10
-            start_time = time.time()
-            while time.time() - start_time < max_wait:
-                status_text = refresh_status.text_content()
-                status_class = refresh_status.get_attribute('class') or ''
-                if 'Last refresh' in status_text or 'success' in status_class:
-                    break
-                time.sleep(0.5)
-            
-            # Verify status was updated
-            final_status = refresh_status.text_content()
-            # Status should show either "Last refresh" or success message
-            assert 'Last refresh' in final_status or 'Refresh started' in final_status or 'Refreshing' in final_status
-            
-        finally:
-            # Clean up test file if we created it
-            if not original_exists and test_json_file.exists():
-                test_json_file.unlink()
+                    # After that: complete
+                    route.fulfill(
+                        status=200,
+                        content_type='application/json',
+                        body=json.dumps({
+                            "in_progress": False,
+                            "can_refresh": True,
+                            "last_refresh": datetime.now(timezone.utc).isoformat()
+                        })
+                    )
+            else:
+                route.continue_()
+        
+        page.route('**/api/status', handle_status)
+        
+        # Reload page to get fresh state
+        page.reload()
+        page.wait_for_selector('#refreshButton', timeout=5000)
+        
+        # Click refresh button
+        refresh_button = page.locator('#refreshButton')
+        refresh_button.click()
+        
+        # Wait for status to show refresh started
+        refresh_status = page.locator('#refreshStatus')
+        refresh_status.wait_for(state='visible', timeout=2000)
+        
+        # Wait for refresh to complete (status polling happens every 2 seconds)
+        # We'll wait up to 10 seconds for the status to update
+        max_wait = 10
+        start_time = time.time()
+        while time.time() - start_time < max_wait:
+            status_text = refresh_status.text_content()
+            status_class = refresh_status.get_attribute('class') or ''
+            if 'Last refresh' in status_text or 'success' in status_class:
+                break
+            time.sleep(0.5)
+        
+        # Verify status was updated
+        final_status = refresh_status.text_content()
+        # Status should show either "Last refresh" or success message
+        assert 'Last refresh' in final_status or 'Refresh started' in final_status or 'Refreshing' in final_status
     
     def test_refresh_button_disabled_during_refresh(self, page, test_server):
         """Test that refresh button is disabled while refresh is in progress."""

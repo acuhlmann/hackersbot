@@ -117,6 +117,8 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            white-space: nowrap; /* prevent height changes from wrapping */
+            min-height: 40px;    /* keep stable height while loading */
         }
 
         .refresh-button:hover:not(:disabled) {
@@ -1331,6 +1333,8 @@
                 if (response.ok && data.success) {
                     statusEl.textContent = 'Refresh started! This may take a few minutes...';
                     statusEl.className = 'refresh-status success';
+                    // Start stream immediately so we don't miss early events.
+                    startRefreshStream();
                     
                     // Start polling for status
                     if (refreshStatusCheckInterval) {
@@ -1341,10 +1345,6 @@
                         const statusResponse = await fetch('/api/status');
                         if (statusResponse.ok) {
                             const status = await statusResponse.json();
-                            // Start stream once we see refresh actually in progress.
-                            if (status.in_progress && !refreshStreamStarted) {
-                                startRefreshStream();
-                            }
                             if (!status.in_progress) {
                                 stopRefreshStream();
                                 // Refresh complete, reload summaries
@@ -1374,6 +1374,8 @@
                     statusEl.className = 'refresh-status error';
                     button.disabled = false;
                     button.classList.remove('loading');
+                    showRefreshStream();
+                    appendRefreshLog(`✖ Refresh failed to start: ${data.error || 'unknown error'}`);
                     stopRefreshStream();
                 }
             } catch (error) {
@@ -1381,6 +1383,8 @@
                 statusEl.className = 'refresh-status error';
                 button.disabled = false;
                 button.classList.remove('loading');
+                showRefreshStream();
+                appendRefreshLog(`✖ Network error: ${error.message}`);
                 stopRefreshStream();
             }
         }

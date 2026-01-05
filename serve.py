@@ -9,6 +9,7 @@ import json
 import threading
 import shutil
 import queue
+from collections import deque
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Tuple, List
@@ -41,10 +42,15 @@ refresh_in_progress = False
 # Broadcast stream state (SSE subscribers)
 subscribers_lock = threading.Lock()
 refresh_subscribers: List["queue.Queue[Dict[str, Any]]"] = []
+refresh_event_history: "deque[Dict[str, Any]]" = deque(maxlen=300)
 
 
 def _broadcast_refresh_event(payload: Dict[str, Any]) -> None:
     """Fan-out refresh progress events to all active subscribers."""
+    try:
+        refresh_event_history.append(payload)
+    except Exception:
+        pass
     with subscribers_lock:
         subscribers = list(refresh_subscribers)
     if not subscribers:
@@ -67,6 +73,9 @@ def _broadcast_refresh_event(payload: Dict[str, Any]) -> None:
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     """Custom handler to serve files at root path with proper routing."""
+
+    # EventSource / SSE works much more reliably with HTTP/1.1
+    protocol_version = "HTTP/1.1"
     
     def do_GET(self):
         """Handle GET requests with custom routing."""
@@ -131,6 +140,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # Send response
             self.send_response(200)
             self.send_header('Content-type', content_type)
+            # With HTTP/1.1, ensure clients know response length.
+            self.send_header('Content-Length', str(len(content)))
             self.end_headers()
             self.wfile.write(content)
         except Exception as e:
@@ -144,10 +155,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def send_json_response(self, data: Dict[str, Any], status_code: int = 200):
         """Send JSON response."""
+        body = json.dumps(data).encode('utf-8')
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Content-Length', str(len(body)))
         self.end_headers()
-        self.wfile.write(json.dumps(data).encode('utf-8'))
+        self.wfile.write(body)
     
     def get_today_summary(self) -> Optional[Dict[str, Any]]:
         """Get today's summary file if it exists."""
@@ -371,6 +384,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-type', 'text/event-stream')
             self.send_header('Cache-Control', 'no-cache')
             self.send_header('Connection', 'keep-alive')
+            # Best-effort: ask reverse proxies not to buffer SSE
+            self.send_header('X-Accel-Buffering', 'no')
             self.end_headers()
 
             # Initial snapshot
@@ -380,6 +395,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "message": "connected",
             }
             self._sse_send(initial, event_name="status")
+
+            # Replay a small tail of recent events so the UI doesn't miss
+            # early logs if it subscribes slightly after refresh starts.
+            try:
+                tail = list(refresh_event_history)[-50:]
+                for payload in tail:
+                    event_name = str(payload.get("type") or "log")
+                    self._sse_send(payload, event_name=event_name)
+            except Exception:
+                pass
 
             # Stream loop
             while True:
