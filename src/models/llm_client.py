@@ -74,39 +74,46 @@ class LLMClient:
             self._client = DeepseekClient(**self._kwargs)
         return self._client
 
-    def summarize(self, text: str, max_length: Optional[int] = None) -> str:
+    def summarize(self, text: str, max_length: Optional[int] = None, title: Optional[str] = None, summarize_type: Optional[str] = None) -> str:
         """
         Summarize text using DeepSeek.
         
         Args:
             text: Text to summarize
             max_length: Optional maximum length hint for summary
+            title: Optional article title for event metadata
+            summarize_type: Optional type indicator ("article" or "comments")
             
         Returns:
             Summary string
         """
         started = time.time()
-        self._emit(
-            {
-                "type": "llm_call",
-                "provider": self.provider,
-                "operation": "summarize",
-                "input_excerpt": self._clip(text, 900),
-                "max_length": max_length,
-            }
-        )
+        # Build metadata-focused event (title only, no content)
+        event_data = {
+            "type": "llm_call",
+            "provider": self.provider,
+            "operation": "summarize",
+        }
+        if title:
+            event_data["title"] = title
+        if summarize_type:
+            event_data["summarize_type"] = summarize_type
+        self._emit(event_data)
         try:
             result = self.client.summarize(text, max_length=max_length)
             elapsed_ms = int((time.time() - started) * 1000)
-            self._emit(
-                {
-                    "type": "llm_result",
-                    "provider": self.provider,
-                    "operation": "summarize",
-                    "elapsed_ms": elapsed_ms,
-                    "output_excerpt": self._clip(result, 900),
-                }
-            )
+            # Result event - just timing and title, no content excerpts
+            result_data = {
+                "type": "llm_result",
+                "provider": self.provider,
+                "operation": "summarize",
+                "elapsed_ms": elapsed_ms,
+            }
+            if title:
+                result_data["title"] = title
+            if summarize_type:
+                result_data["summarize_type"] = summarize_type
+            self._emit(result_data)
             return result
         except Exception as e:
             elapsed_ms = int((time.time() - started) * 1000)
@@ -117,6 +124,7 @@ class LLMClient:
                     "operation": "summarize",
                     "elapsed_ms": elapsed_ms,
                     "error": str(e),
+                    "title": title,
                 }
             )
             raise
@@ -134,14 +142,13 @@ class LLMClient:
             Dictionary with 'is_ai_related' (bool) and 'confidence' (float 0-1)
         """
         started = time.time()
+        # Metadata-only event - no content excerpts
         self._emit(
             {
                 "type": "llm_call",
                 "provider": self.provider,
                 "operation": "classify_ai_topic",
                 "title": title,
-                "url": url,
-                "content_excerpt": self._clip(content, 600),
             }
         )
         try:
@@ -153,7 +160,7 @@ class LLMClient:
                     "provider": self.provider,
                     "operation": "classify_ai_topic",
                     "elapsed_ms": elapsed_ms,
-                    "result": result,
+                    "title": title,
                 }
             )
             return result
@@ -166,6 +173,7 @@ class LLMClient:
                     "operation": "classify_ai_topic",
                     "elapsed_ms": elapsed_ms,
                     "error": str(e),
+                    "title": title,
                 }
             )
             raise
@@ -182,13 +190,12 @@ class LLMClient:
             Generated text
         """
         started = time.time()
+        # Metadata-only event - no content excerpts
         self._emit(
             {
                 "type": "llm_request",
                 "provider": self.provider,
                 "role": "generate",
-                "temperature": temperature,
-                "prompt_excerpt": self._clip(prompt, 900),
             }
         )
         try:
@@ -200,7 +207,6 @@ class LLMClient:
                     "provider": self.provider,
                     "role": "generate",
                     "elapsed_ms": elapsed_ms,
-                    "response_excerpt": self._clip(result, 900),
                 }
             )
             return result
@@ -242,12 +248,12 @@ class LLMClient:
             Generated text
         """
         started = time.time()
+        # Metadata-only event - no content excerpts
         self._emit(
             {
                 "type": "llm_request",
                 "provider": self.provider,
                 "role": "invoke",
-                "prompt_excerpt": self._clip(prompt, 900),
             }
         )
         try:
@@ -260,7 +266,6 @@ class LLMClient:
                     "provider": self.provider,
                     "role": "invoke",
                     "elapsed_ms": elapsed_ms,
-                    "response_excerpt": self._clip(result_str, 900),
                 }
             )
             return result_str
