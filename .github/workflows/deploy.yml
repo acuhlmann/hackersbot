@@ -54,6 +54,7 @@ jobs:
           ZONE: asia-east2-a
           INSTANCE: main
           PROJECT: photogroup-215600
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       
       - name: Deployment summary
         run: |

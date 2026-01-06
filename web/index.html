@@ -112,7 +112,7 @@
             font-size: 0.8rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -126,9 +126,10 @@
             line-height: 1;
             flex-shrink: 0;
             flex-grow: 0;
+            position: relative;
         }
 
-        .refresh-button:hover:not(:disabled) {
+        .refresh-button:hover:not(:disabled):not(.loading) {
             background: var(--accent-orange);
             border-color: var(--accent-orange);
             color: var(--bg-primary);
@@ -139,20 +140,18 @@
             cursor: not-allowed;
         }
 
-        .refresh-button.loading {
-            position: relative;
-            color: transparent;
-            height: 40px !important;
-            min-height: 40px !important;
-            max-height: 40px !important;
-        }
-        
-        .refresh-button.loading > * {
-            visibility: hidden;
+        .refresh-button .button-text {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: opacity 0.15s ease;
         }
 
-        .refresh-button.loading::after {
-            content: '';
+        .refresh-button.loading .button-text {
+            opacity: 0;
+        }
+
+        .refresh-button .spinner {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -162,6 +161,12 @@
             border: 2px solid var(--accent-orange);
             border-top-color: transparent;
             border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .refresh-button.loading .spinner {
+            opacity: 1;
             animation: spin 0.8s linear infinite;
         }
 
@@ -784,7 +789,7 @@
             font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease;
             white-space: nowrap;
             height: 38px;
             min-height: 38px;
@@ -796,9 +801,10 @@
             line-height: 1;
             flex-shrink: 0;
             flex-grow: 0;
+            position: relative;
         }
 
-        .adhoc-submit-btn:hover:not(:disabled) {
+        .adhoc-submit-btn:hover:not(:disabled):not(.loading) {
             background: #ff9070;
         }
 
@@ -807,20 +813,15 @@
             cursor: not-allowed;
         }
 
-        .adhoc-submit-btn.loading {
-            position: relative;
-            color: transparent;
-            height: 38px !important;
-            min-height: 38px !important;
-            max-height: 38px !important;
-        }
-        
-        .adhoc-submit-btn.loading > * {
-            visibility: hidden;
+        .adhoc-submit-btn .button-text {
+            transition: opacity 0.15s ease;
         }
 
-        .adhoc-submit-btn.loading::after {
-            content: '';
+        .adhoc-submit-btn.loading .button-text {
+            opacity: 0;
+        }
+
+        .adhoc-submit-btn .spinner {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -830,6 +831,12 @@
             border: 2px solid var(--bg-primary);
             border-top-color: transparent;
             border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .adhoc-submit-btn.loading .spinner {
+            opacity: 1;
             animation: spin 0.8s linear infinite;
         }
 
@@ -1004,7 +1011,8 @@
             <div id="dailyTab" class="tab-content active">
                 <div class="refresh-section">
                     <button id="refreshButton" class="refresh-button" onclick="triggerRefresh()">
-                        🔄 Refresh Today's Summary
+                        <span class="button-text">🔄 Refresh Today's Summary</span>
+                        <span class="spinner"></span>
                     </button>
                     <div id="refreshStatus" class="refresh-status"></div>
                     <div id="refreshStream" class="refresh-stream hidden">
@@ -1041,7 +1049,8 @@
                             oninput="validateAdhocUrl()"
                         >
                         <button id="adhocSubmitBtn" class="adhoc-submit-btn" onclick="submitAdhocUrl()" disabled>
-                            Go
+                            <span class="button-text">Go</span>
+                            <span class="spinner"></span>
                         </button>
                     </div>
                     <div id="adhocStatus" class="adhoc-status"></div>
