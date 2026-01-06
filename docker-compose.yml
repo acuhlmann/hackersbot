@@ -10,6 +10,7 @@ services:
       - PORT=8000
       - BIND_ADDRESS=0.0.0.0
       - PYTHONUNBUFFERED=1
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     volumes:
       # Mount summaries for live updates during development (read-write for index generation)
       - ./summaries:/app/summaries
