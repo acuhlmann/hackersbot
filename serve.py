@@ -289,6 +289,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/adhoc-summaries':
             # Get ad-hoc summaries index
             self.handle_adhoc_summaries()
+        elif path == '/api/adhoc-status':
+            # Get ad-hoc refresh status (daily limit info)
+            self.handle_adhoc_status()
         elif path.startswith('/summaries/'):
             # Serve files from summaries directory
             file_path = PROJECT_ROOT / path[1:]  # Remove leading /
@@ -457,6 +460,41 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return True, None
         
         return True, None
+    
+    def count_adhoc_refreshes_today(self) -> int:
+        """Count how many adhoc summaries were refreshed/created today."""
+        adhoc_dir = PROJECT_ROOT / "summaries" / "adhoc"
+        if not adhoc_dir.exists():
+            return 0
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        count = 0
+        
+        for json_file in adhoc_dir.glob("*_summary.json"):
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                generated_at_str = data.get('generated_at', '')
+                if generated_at_str.startswith(today):
+                    count += 1
+            except Exception:
+                continue
+        
+        return count
+    
+    def check_adhoc_daily_limit(self) -> Tuple[bool, int, Optional[str]]:
+        """
+        Check if daily adhoc refresh limit (5 per day) has been reached.
+        Returns (allowed, remaining_count, error_message).
+        """
+        daily_limit = 5
+        count_today = self.count_adhoc_refreshes_today()
+        remaining = daily_limit - count_today
+        
+        if remaining <= 0:
+            return False, 0, f"Daily limit reached: You can refresh up to {daily_limit} articles per day. Try again tomorrow."
+        
+        return True, remaining, None
     
     def handle_status(self):
         """Handle GET /api/status - return refresh status and last refresh time."""
@@ -638,7 +676,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             
             item_id = match.group(2)
             
-            # Check rate limit (same as daily refresh - once per hour)
+            # Check daily limit (5 refreshes per day across all articles)
+            can_refresh_daily, remaining, daily_error = self.check_adhoc_daily_limit()
+            if not can_refresh_daily:
+                self.send_json_response({
+                    "success": False,
+                    "error": daily_error
+                }, status_code=429)
+                return
+            
+            # Check per-article rate limit (once per hour for the same article)
             can_summarize, error_msg = self.check_adhoc_rate_limit(item_id)
             if not can_summarize:
                 self.send_json_response({
@@ -775,6 +822,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         else:
             # Return empty list if no adhoc summaries yet
             self.send_json_response([])
+    
+    def handle_adhoc_status(self):
+        """Handle GET /api/adhoc-status - return adhoc refresh status."""
+        can_refresh, remaining, error_msg = self.check_adhoc_daily_limit()
+        self.send_json_response({
+            "can_refresh": can_refresh,
+            "remaining_today": remaining,
+            "daily_limit": 5,
+            "error_message": error_msg
+        })
 
     def handle_refresh_stream(self):
         """Handle GET /api/refresh/stream - stream refresh progress (SSE)."""

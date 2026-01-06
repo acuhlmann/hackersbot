@@ -19,6 +19,7 @@ class SummarizerAgent:
             llm_client: Optional LLMClient instance (creates new one if not provided)
         """
         self.llm_client = llm_client or get_llm_client()
+        self._current_article_title: Optional[str] = None
     
     def summarize_article(self, article: Dict, include_comments: bool = True) -> Dict:
         """
@@ -35,6 +36,9 @@ class SummarizerAgent:
         url = article.get("url", "")
         content = article.get("content", "")
         comments = article.get("comments", [])
+        
+        # Set current article title for event metadata
+        self._current_article_title = title
         
         # Build article summary
         article_summary = self._summarize_article_content(title, url, content)
@@ -90,7 +94,7 @@ class SummarizerAgent:
             summary_text = summary_text[:max_chars] + "..."
         
         logger.info("  Calling LLM to summarize article: %s", title[:50])
-        summary = self.llm_client.summarize(summary_text, max_length=150)
+        summary = self.llm_client.summarize(summary_text, max_length=150, title=title, summarize_type="article")
         logger.info("  LLM summary generated (length: %d chars)", len(summary))
         return summary
     
@@ -211,7 +215,7 @@ Concise summary of discussion topics:"""
         
         # Use the summarize method with max_length to keep it short like article summaries
         logger.info("  Calling LLM to summarize %d comments...", len(valid_comments))
-        summary = self.llm_client.summarize(comments_text, max_length=150)
+        summary = self.llm_client.summarize(comments_text, max_length=150, title=article_title, summarize_type="comments")
         logger.info("  LLM comment summary generated (length: %d chars)", len(summary))
         
         # Get sentiment analysis

@@ -167,7 +167,7 @@
 
         .refresh-button.loading .spinner {
             opacity: 1;
-            animation: spin 0.8s linear infinite;
+            animation: spin-centered 0.8s linear infinite;
         }
 
         .refresh-status {
@@ -837,7 +837,7 @@
 
         .adhoc-submit-btn.loading .spinner {
             opacity: 1;
-            animation: spin 0.8s linear infinite;
+            animation: spin-centered 0.8s linear infinite;
         }
 
         .adhoc-status {
@@ -853,6 +853,73 @@
 
         .adhoc-status.success {
             color: var(--accent-green);
+        }
+
+        .adhoc-limit-status {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            padding: 0.4rem 0.6rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .adhoc-limit-status.warning {
+            color: var(--accent-yellow);
+        }
+
+        .adhoc-limit-status.exhausted {
+            color: var(--accent-orange);
+        }
+
+        .article-refresh-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 1rem;
+        }
+
+        .article-refresh-btn:hover:not(:disabled) {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: var(--accent-blue);
+        }
+
+        .article-refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .article-refresh-btn.loading {
+            pointer-events: none;
+        }
+
+        .article-refresh-btn .btn-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent-blue);
+            border-top-color: transparent;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .article-refresh-btn.loading .btn-spinner {
+            display: block;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .article-refresh-btn.loading .btn-text {
+            display: none;
         }
 
         /* Ad-hoc summary item */
@@ -917,7 +984,13 @@
         }
 
         @keyframes spin {
+            from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-centered {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
         /* Responsive */
@@ -1054,6 +1127,7 @@
                         </button>
                     </div>
                     <div id="adhocStatus" class="adhoc-status"></div>
+                    <div id="adhocLimitStatus" class="adhoc-limit-status"></div>
                 </div>
                 <div class="summary-list">
                     <h2>Summarized Articles</h2>
@@ -1508,15 +1582,44 @@
                     const payload = JSON.parse(e.data || '{}');
                     const msg = payload.message || payload.error || '';
                     if (label === 'llm_request') {
-                        appendRefreshLog(`LLM → (${payload.provider || 'llm'}:${payload.role || 'invoke'}) prompt: ${payload.prompt_excerpt || ''}`);
+                        // Show metadata only - no content
+                        appendRefreshLog(`LLM → ${payload.role || 'request'}`);
                     } else if (label === 'llm_response') {
-                        appendRefreshLog(`LLM ← (${payload.provider || 'llm'}:${payload.role || 'invoke'}) ${payload.elapsed_ms || 0}ms: ${payload.response_excerpt || ''}`);
+                        appendRefreshLog(`LLM ← ${payload.role || 'response'} (${payload.elapsed_ms || 0}ms)`);
                     } else if (label === 'llm_call') {
-                        appendRefreshLog(`LLM → (${payload.provider || 'llm'}) ${payload.operation || 'call'}: ${payload.input_excerpt || payload.title || ''}`);
+                        // Format based on summarize_type (article vs comments)
+                        const title = payload.title || '';
+                        const truncTitle = title.length > 60 ? title.substring(0, 60) + '...' : title;
+                        if (payload.operation === 'summarize') {
+                            if (payload.summarize_type === 'article') {
+                                appendRefreshLog(`📄 Summarizing article: "${truncTitle}"`);
+                            } else if (payload.summarize_type === 'comments') {
+                                appendRefreshLog(`💬 Summarizing comments: "${truncTitle}"`);
+                            } else {
+                                appendRefreshLog(`📝 Summarizing: "${truncTitle}"`);
+                            }
+                        } else if (payload.operation === 'classify_ai_topic') {
+                            appendRefreshLog(`🏷️ Classifying: "${truncTitle}"`);
+                        } else {
+                            appendRefreshLog(`LLM → ${payload.operation || 'call'}`);
+                        }
                     } else if (label === 'llm_result') {
-                        appendRefreshLog(`LLM ← (${payload.provider || 'llm'}) ${payload.operation || 'result'} ${payload.elapsed_ms || 0}ms: ${payload.output_excerpt || ''}`);
+                        // Show completion with timing only - no content
+                        const title = payload.title || '';
+                        const truncTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
+                        if (payload.operation === 'summarize' && title) {
+                            if (payload.summarize_type === 'article') {
+                                appendRefreshLog(`✓ Article summarized (${payload.elapsed_ms || 0}ms)`);
+                            } else if (payload.summarize_type === 'comments') {
+                                appendRefreshLog(`✓ Comments summarized (${payload.elapsed_ms || 0}ms)`);
+                            } else {
+                                appendRefreshLog(`✓ Done (${payload.elapsed_ms || 0}ms)`);
+                            }
+                        } else {
+                            appendRefreshLog(`✓ ${payload.operation || 'Done'} (${payload.elapsed_ms || 0}ms)`);
+                        }
                     } else if (label === 'llm_error') {
-                        appendRefreshLog(`LLM ✖ (${payload.provider || 'llm'}) error: ${payload.error || 'unknown error'}`);
+                        appendRefreshLog(`✖ Error: ${payload.error || 'unknown error'}`);
                     } else if (label === 'refresh_error') {
                         appendRefreshLog(`✖ ${msg || 'Refresh failed'}`);
                         stopRefreshStream();
@@ -1691,8 +1794,9 @@
                     loadSummary(summaries[0].jsonFile);
                 }
             } else {
-                // Load adhoc summaries and show appropriate view
+                // Load adhoc summaries and status, show appropriate view
                 loadAdhocSummaries();
+                loadAdhocStatus();
                 if (adhocSummaries.length > 0 && !currentAdhocSummary) {
                     loadAdhocSummary(adhocSummaries[0].jsonFile);
                 } else if (adhocSummaries.length === 0) {
@@ -1707,6 +1811,36 @@
         const HN_URL_PATTERN = /^https?:\/\/(www\.)?news\.ycombinator\.com\/item\?id=(\d+)$/;
         let adhocSummaries = [];
         let currentAdhocSummary = null;
+        let adhocRemainingToday = 5;
+
+        async function loadAdhocStatus() {
+            try {
+                const response = await fetch('/api/adhoc-status');
+                if (response.ok) {
+                    const status = await response.json();
+                    adhocRemainingToday = status.remaining_today;
+                    updateAdhocLimitDisplay();
+                }
+            } catch (error) {
+                console.error('Failed to load adhoc status:', error);
+            }
+        }
+
+        function updateAdhocLimitDisplay() {
+            const limitEl = document.getElementById('adhocLimitStatus');
+            if (!limitEl) return;
+            
+            if (adhocRemainingToday <= 0) {
+                limitEl.textContent = `⚠️ Daily limit reached (0/5 refreshes remaining)`;
+                limitEl.className = 'adhoc-limit-status exhausted';
+            } else if (adhocRemainingToday <= 2) {
+                limitEl.textContent = `🔄 ${adhocRemainingToday}/5 refreshes remaining today`;
+                limitEl.className = 'adhoc-limit-status warning';
+            } else {
+                limitEl.textContent = `🔄 ${adhocRemainingToday}/5 refreshes remaining today`;
+                limitEl.className = 'adhoc-limit-status';
+            }
+        }
 
         function validateAdhocUrl() {
             const input = document.getElementById('adhocUrlInput');
@@ -1769,6 +1903,10 @@
                     // Clear input
                     input.value = '';
                     input.classList.remove('valid', 'invalid');
+                    
+                    // Update remaining count
+                    adhocRemainingToday = Math.max(0, adhocRemainingToday - 1);
+                    updateAdhocLimitDisplay();
                     
                     // Reload adhoc list and show the new summary
                     await loadAdhocSummaries();
@@ -1876,10 +2014,25 @@
             const isAi = isAiRelated(article);
             const topics = article.comment_topics || [];
             const generatedAt = data.generated_at ? formatGeneratedAt(data.generated_at) : null;
+            const itemId = data.item_id || article.id;
+            const hnUrl = data.hn_url || `https://news.ycombinator.com/item?id=${itemId}`;
+            const canRefresh = adhocRemainingToday > 0;
 
             mainContent.innerHTML = `
                 <header class="summary-header">
-                    <div class="timestamp">Single Article Summary</div>
+                    <div class="timestamp">
+                        Single Article Summary
+                        <button 
+                            id="articleRefreshBtn" 
+                            class="article-refresh-btn" 
+                            onclick="refreshAdhocArticle('${hnUrl}')"
+                            ${!canRefresh ? 'disabled' : ''}
+                            title="${canRefresh ? 'Refresh this summary' : 'Daily limit reached'}"
+                        >
+                            <span class="btn-text">🔄 Refresh</span>
+                            <span class="btn-spinner"></span>
+                        </button>
+                    </div>
                     <h1>${escapeHtml(article.title)}</h1>
                     <div class="summary-meta">
                         <span class="meta-item">Points: <span>${article.points || 0}</span></span>
@@ -1892,7 +2045,7 @@
                 
                 <article class="article">
                     <div class="article-header">
-                        <div class="article-rank">HN #${data.item_id || article.id}</div>
+                        <div class="article-rank">HN #${itemId}</div>
                         ${isAi ? '<span class="article-ai-tag">⚡ AI/ML Topic</span>' : ''}
                     </div>
                     <h2><a href="${article.url}" target="_blank" rel="noopener">${escapeHtml(article.title)}</a></h2>
@@ -1924,11 +2077,70 @@
                         </div>
                     ` : ''}
                     
-                    <a href="${data.hn_url || article.comment_url}" target="_blank" rel="noopener" class="hn-link">
+                    <a href="${hnUrl}" target="_blank" rel="noopener" class="hn-link">
                         → View on Hacker News
                     </a>
                 </article>
             `;
+        }
+
+        async function refreshAdhocArticle(url) {
+            const refreshBtn = document.getElementById('articleRefreshBtn');
+            const statusEl = document.getElementById('adhocStatus');
+            
+            if (!refreshBtn) return;
+            
+            // Show loading state
+            refreshBtn.classList.add('loading');
+            refreshBtn.disabled = true;
+            if (statusEl) {
+                statusEl.textContent = 'Refreshing summary...';
+                statusEl.className = 'adhoc-status';
+            }
+            
+            try {
+                const response = await fetch('/api/summarize-single', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    if (statusEl) {
+                        statusEl.textContent = 'Summary refreshed successfully!';
+                        statusEl.className = 'adhoc-status success';
+                    }
+                    
+                    // Update remaining count
+                    adhocRemainingToday = Math.max(0, adhocRemainingToday - 1);
+                    updateAdhocLimitDisplay();
+                    
+                    // Reload adhoc list and display refreshed summary
+                    await loadAdhocSummaries();
+                    
+                    if (data.data) {
+                        currentAdhocSummary = data.data;
+                        renderAdhocArticle(data.data);
+                    }
+                } else {
+                    if (statusEl) {
+                        statusEl.textContent = data.error || 'Failed to refresh summary';
+                        statusEl.className = 'adhoc-status error';
+                    }
+                }
+            } catch (error) {
+                if (statusEl) {
+                    statusEl.textContent = `Error: ${error.message}`;
+                    statusEl.className = 'adhoc-status error';
+                }
+            } finally {
+                refreshBtn.classList.remove('loading');
+                refreshBtn.disabled = adhocRemainingToday <= 0;
+            }
         }
 
         function showAdhocEmptyState() {
@@ -1957,10 +2169,12 @@
         // Start the app
         init();
         loadAdhocSummaries();
+        loadAdhocStatus();
         
         // Check refresh status on load and periodically
         checkRefreshStatus();
         setInterval(checkRefreshStatus, 5000); // Check every 5 seconds
+        setInterval(loadAdhocStatus, 30000); // Check adhoc status every 30 seconds
     </script>
 </body>
 </html>
