@@ -237,6 +237,18 @@ location / {
 
 If the app is served from a subpath (e.g. `https://example.com/hn/`), the web UI detects it and requests `/hn/summaries` and `/hn/api/...`; ensure the proxy forwards that prefix to the backend.
 
+### Deploy (GCP)
+
+The **Deploy to GCP VM** GitHub Action uses `deploy-docker.sh` to build the Docker image and run it on a GCP Compute Engine VM. For the workflow to succeed:
+
+1. **GitHub secret `GCP_SA_KEY`** must be the JSON key of a GCP service account that can SSH into the VM. Grant that service account one of:
+   - **OS Login**: If the project or VM has OS Login enabled (`enable-oslogin=TRUE`), grant the service account **Compute OS Login** (`roles/compute.osLogin`) on the project (or the VM’s resource hierarchy).
+   - **Legacy metadata SSH keys**: Otherwise grant a role that allows setting instance metadata, e.g. **Compute Instance Admin (v1)** (`roles/compute.instanceAdmin.v1`) on the project or instance, so `gcloud compute ssh` can add an ephemeral SSH key.
+
+2. **IAP tunnel**: The script uses `--tunnel-through-iap` for all `gcloud compute ssh` calls (for VMs without a public IP or when SSH is only allowed via IAP). The same service account needs **IAP-secured Tunnel User** (`roles/iap.tunnelResourceAccessor`) on the project (or the VM’s resource) so it can create IAP tunnels.
+
+3. **Deploy defaults**: Project `photogroup-215600`, zone `asia-east2-a`, instance `main`. The script installs Docker on the VM if it is missing. Set `ZONE`, `INSTANCE`, `PROJECT` in the workflow env if you use different values.
+
 ## 🔄 GitHub Actions (No Server Needed!)
 
 You can run the summarizer directly from GitHub without any server!

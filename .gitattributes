@@ -1,0 +1,2 @@
+# Ensure shell scripts use LF so they run in GitHub Actions (Linux) and bash on Windows
+*.sh text eol=lf

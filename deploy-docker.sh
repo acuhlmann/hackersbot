@@ -33,7 +33,7 @@ run_gcloud_ssh() {
     local exit_code
     
     # Run command, capture both output and exit code
-    temp_output=$(gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command "$cmd" 2>&1)
+    temp_output=$(gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command "$cmd" -- -o StrictHostKeyChecking=accept-new 2>&1)
     exit_code=$?
     
     # Filter out metadata warnings but keep everything else
@@ -117,7 +117,7 @@ fi
 
 # Stream Docker image to VM and load it (no tar file on VM)
 echo "Streaming Docker image to VM and loading it (no /tmp tarball)..."
-LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command "sudo docker load" -- -T 2>&1)
+LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command "sudo docker load" -- -o StrictHostKeyChecking=accept-new -T 2>&1)
 LOAD_EXIT_CODE=$?
 
 if [ $LOAD_EXIT_CODE -ne 0 ]; then
@@ -141,7 +141,7 @@ if [ $LOAD_EXIT_CODE -ne 0 ]; then
         sudo docker system df 2>/dev/null || true
     " "Aggressive cleanup" || true
 
-    LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command "sudo docker load" -- -T 2>&1)
+    LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command "sudo docker load" -- -o StrictHostKeyChecking=accept-new -T 2>&1)
     LOAD_EXIT_CODE=$?
     if [ $LOAD_EXIT_CODE -ne 0 ]; then
         echo "=== IMAGE LOAD RETRY FAILED ==="
@@ -211,8 +211,12 @@ run_gcloud_ssh "
     fi
 " "Deploying Docker container" || exit 1
 
+# Prune unused Docker images to avoid disk filling up after repeated deploys
+echo "Pruning unused Docker images on VM..."
+run_gcloud_ssh "sudo docker image prune -f && sudo docker builder prune -f 2>/dev/null || true" "Pruning unused Docker resources" "true" || true
+
 echo ""
-echo "✅ Docker deployment completed successfully!"
+echo "âœ… Docker deployment completed successfully!"
 echo ""
 echo "=== Container Status ==="
 run_gcloud_ssh "sudo docker ps --filter name=$CONTAINER_NAME --format 'table {{.ID}}\t{{.Image}}\t{{.Command}}\t{{.CreatedAt}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}'" "Checking container status" "true" || true
@@ -222,6 +226,6 @@ run_gcloud_ssh "sudo docker logs --tail 20 $CONTAINER_NAME 2>&1" "Viewing contai
 echo ""
 echo "The app should be available at: https://hackernews.photogroup.network"
 echo ""
-echo "To view logs: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command 'sudo docker logs -f $CONTAINER_NAME'"
-echo "To restart: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --command 'sudo docker restart $CONTAINER_NAME'"
+echo "To view logs: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command 'sudo docker logs -f $CONTAINER_NAME'"
+echo "To restart: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command 'sudo docker restart $CONTAINER_NAME'"
 
