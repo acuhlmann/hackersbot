@@ -55,6 +55,16 @@ jobs:
           INSTANCE: main
           PROJECT: photogroup-215600
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+`
+      - name: Deployment troubleshooting (on failure)
+        if: failure()
+        run: |
+          echo "::group::Deploy failed – common fixes"
+          echo "• IAP 4033 'not authorized': Grant the GCP_SA_KEY service account role: roles/iap.tunnelResourceAccessor"
+          echo "  See README → Deploy (GCP) → troubleshooting"
+          echo "• Disk full on VM: SSH to VM and run: sudo docker image prune -af"
+          echo "• Run SSH diagnose: gcloud compute ssh main --project=photogroup-215600 --zone=asia-east2-a --troubleshoot --tunnel-through-iap 2>&1 || true"
+          echo "::endgroup::"
       
       - name: Deployment summary
         run: |

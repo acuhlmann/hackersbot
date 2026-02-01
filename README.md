@@ -245,9 +245,18 @@ The **Deploy to GCP VM** GitHub Action uses `deploy-docker.sh` to build the Dock
    - **OS Login**: If the project or VM has OS Login enabled (`enable-oslogin=TRUE`), grant the service account **Compute OS Login** (`roles/compute.osLogin`) on the project (or the VM’s resource hierarchy).
    - **Legacy metadata SSH keys**: Otherwise grant a role that allows setting instance metadata, e.g. **Compute Instance Admin (v1)** (`roles/compute.instanceAdmin.v1`) on the project or instance, so `gcloud compute ssh` can add an ephemeral SSH key.
 
-2. **IAP tunnel**: The script uses `--tunnel-through-iap` for all `gcloud compute ssh` calls (for VMs without a public IP or when SSH is only allowed via IAP). The same service account needs **IAP-secured Tunnel User** (`roles/iap.tunnelResourceAccessor`) on the project (or the VM’s resource) so it can create IAP tunnels.
+2. **SSH / IAP**: By default the script uses **direct SSH** (VM must have a public IP and allow SSH). If your VM has no public IP or only allows SSH via IAP, set `USE_IAP_TUNNEL=1` in the workflow env (or when running the script) and grant the service account **IAP-secured Tunnel User** (`roles/iap.tunnelResourceAccessor`).
 
 3. **Deploy defaults**: Project `photogroup-215600`, zone `asia-east2-a`, instance `main`. The script installs Docker on the VM if it is missing. Set `ZONE`, `INSTANCE`, `PROJECT` in the workflow env if you use different values.
+
+**Deploy failed with `Error [4033: 'not authorized']` (only when using IAP)?**  
+The service account in `GCP_SA_KEY` must be allowed to use IAP tunnels. In GCP Console: **IAM & Admin → IAM** → find that service account → **Edit** (pencil) → **Add another role** → **IAP-secured Tunnel User** (`roles/iap.tunnelResourceAccessor`) → Save. Or with gcloud (replace `SA_EMAIL` with the service account email, e.g. `github-deploy@photogroup-215600.iam.gserviceaccount.com`):
+
+```bash
+gcloud projects add-iam-policy-binding photogroup-215600 \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/iap.tunnelResourceAccessor"
+```
 
 ## 🔄 GitHub Actions (No Server Needed!)
 

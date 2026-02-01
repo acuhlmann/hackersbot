@@ -9,6 +9,12 @@ PROJECT=${PROJECT:-photogroup-215600}
 IMAGE_NAME=hackersbot
 CONTAINER_NAME=hackersbot-app
 
+# Use IAP tunnel only when needed (VM with no public IP or firewall-only SSH).
+# Default: direct SSH. Set USE_IAP_TUNNEL=1 to use --tunnel-through-iap (requires roles/iap.tunnelResourceAccessor).
+USE_IAP_TUNNEL=${USE_IAP_TUNNEL:-}
+IAP_FLAG=""
+if [[ -n "$USE_IAP_TUNNEL" ]]; then IAP_FLAG="--tunnel-through-iap"; fi
+
 # DeepSeek API key (required)
 DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
 
@@ -25,25 +31,30 @@ if ! gcloud compute instances describe $INSTANCE --project $PROJECT --zone $ZONE
 fi
 
 # Function to run gcloud commands and ignore metadata update warnings
+# Uses a temp file instead of $(...) so gcloud/ssh don't hang in non-interactive subshells (CI, Windows, etc.)
 run_gcloud_ssh() {
     local cmd="$1"
     local description="$2"
     local allow_failure="${3:-false}"  # Third parameter: allow failure (default: false)
+    local temp_file
     local temp_output
+    local filtered_output
     local exit_code
-    
-    # Run command, capture both output and exit code
-    temp_output=$(gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command "$cmd" -- -o StrictHostKeyChecking=accept-new 2>&1)
+
+    temp_file=$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/deploy-ssh-$$.log")
+    gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE $IAP_FLAG --command "$cmd" -- -o StrictHostKeyChecking=accept-new </dev/null >"$temp_file" 2>&1
     exit_code=$?
-    
+    temp_output=$(cat "$temp_file" 2>/dev/null)
+    rm -f "$temp_file"
+
     # Filter out metadata warnings but keep everything else
     filtered_output=$(echo "$temp_output" | grep -v "^Updating project ssh metadata\.\.\." | grep -v "^Updating instance ssh metadata\.\.\." | grep -v "^\.$" | grep -v "^done\.$" || true)
-    
+
     # Show filtered output if there's content
     if [ -n "$filtered_output" ]; then
         echo "$filtered_output"
     fi
-    
+
     if [ $exit_code -ne 0 ]; then
         if [ "$allow_failure" != "true" ]; then
             echo "ERROR: $description failed (exit code: $exit_code)" >&2
@@ -66,6 +77,7 @@ if ! run_gcloud_ssh "docker --version" "Checking Docker" >/dev/null 2>&1; then
     echo "Docker is not installed on the VM. Installing Docker..."
     run_gcloud_ssh "curl -fsSL https://get.docker.com | sudo sh && sudo systemctl enable docker && sudo systemctl start docker" "Installing Docker" || {
         echo "ERROR: Failed to install Docker on the VM"
+        echo "If the error above shows '4033' or 'not authorized', grant the service account roles/iap.tunnelResourceAccessor (see README Deploy GCP troubleshooting)."
         exit 1
     }
     echo "Docker installed successfully."
@@ -117,7 +129,7 @@ fi
 
 # Stream Docker image to VM and load it (no tar file on VM)
 echo "Streaming Docker image to VM and loading it (no /tmp tarball)..."
-LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command "sudo docker load" -- -o StrictHostKeyChecking=accept-new -T 2>&1)
+LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE $IAP_FLAG --command "sudo docker load" -- -o StrictHostKeyChecking=accept-new -T 2>&1)
 LOAD_EXIT_CODE=$?
 
 if [ $LOAD_EXIT_CODE -ne 0 ]; then
@@ -141,7 +153,7 @@ if [ $LOAD_EXIT_CODE -ne 0 ]; then
         sudo docker system df 2>/dev/null || true
     " "Aggressive cleanup" || true
 
-    LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command "sudo docker load" -- -o StrictHostKeyChecking=accept-new -T 2>&1)
+    LOAD_OUTPUT=$(docker save $IMAGE_NAME:latest | gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE $IAP_FLAG --command "sudo docker load" -- -o StrictHostKeyChecking=accept-new -T 2>&1)
     LOAD_EXIT_CODE=$?
     if [ $LOAD_EXIT_CODE -ne 0 ]; then
         echo "=== IMAGE LOAD RETRY FAILED ==="
@@ -226,6 +238,6 @@ run_gcloud_ssh "sudo docker logs --tail 20 $CONTAINER_NAME 2>&1" "Viewing contai
 echo ""
 echo "The app should be available at: https://hackernews.photogroup.network"
 echo ""
-echo "To view logs: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command 'sudo docker logs -f $CONTAINER_NAME'"
-echo "To restart: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE --tunnel-through-iap --command 'sudo docker restart $CONTAINER_NAME'"
+echo "To view logs: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE $IAP_FLAG --command 'sudo docker logs -f $CONTAINER_NAME'"
+echo "To restart: gcloud compute ssh $INSTANCE --project $PROJECT --zone $ZONE $IAP_FLAG --command 'sudo docker restart $CONTAINER_NAME'"
 
