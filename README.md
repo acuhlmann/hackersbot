@@ -210,6 +210,33 @@ docker-compose up
 
 This will start the web server on port 8000.
 
+### Reverse proxy (production)
+
+When putting the app behind nginx or another reverse proxy, **proxy all paths** to the backend so the web UI can load summaries and call APIs:
+
+- **`/`** – HTML and assets
+- **`/summaries/`** – JSON summary files and `index.json`
+- **`/api/`** – API endpoints (status, refresh, adhoc-summaries, etc.)
+
+Example nginx location block (proxy to container on `127.0.0.1:18080`):
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:18080;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    # For SSE (refresh stream)
+    proxy_buffering off;
+    proxy_read_timeout 86400s;
+    proxy_send_timeout 86400s;
+}
+```
+
+If the app is served from a subpath (e.g. `https://example.com/hn/`), the web UI detects it and requests `/hn/summaries` and `/hn/api/...`; ensure the proxy forwards that prefix to the backend.
+
 ## 🔄 GitHub Actions (No Server Needed!)
 
 You can run the summarizer directly from GitHub without any server!

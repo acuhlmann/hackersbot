@@ -1149,8 +1149,14 @@
     </div>
 
     <script>
-        // Configuration - summaries are served at /summaries/ path
-        const SUMMARIES_PATH = '/summaries';
+        // Base path: when served from a subpath (e.g. https://example.com/app/) we need to prefix API and summary paths.
+        // Derive from current location so it works behind reverse proxies and subpath deployments.
+        const BASE = (function() {
+            const p = (window.location.pathname || '/').replace(/\/?index\.html$/i, '').replace(/\/$/, '') || '';
+            return p || '';
+        })();
+        const SUMMARIES_PATH = BASE + '/summaries';
+        const API_BASE = BASE + '/api';
         
         let summaries = [];
         let currentSummary = null;
@@ -1302,11 +1308,15 @@
                 currentSummary = data;
                 renderSummary(data, filename);
             } catch (error) {
+                const isNetworkError = (error.message === 'Failed to fetch' || error.message === 'Load failed' || error.name === 'TypeError');
+                const message = isNetworkError
+                    ? 'Could not reach the server. If this app is behind a reverse proxy, ensure /summaries and /api are proxied to the backend.'
+                    : error.message;
                 mainContent.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">⚠️</div>
                         <h2>Failed to load summary</h2>
-                        <p>${error.message}</p>
+                        <p>${escapeHtml(message)}</p>
                     </div>
                 `;
             }
@@ -1471,9 +1481,13 @@
                 }
             } catch (error) {
                 console.error('Failed to initialize:', error);
+                const isNetworkError = (error.message === 'Failed to fetch' || error.message === 'Load failed' || error.name === 'TypeError');
+                const hint = isNetworkError
+                    ? ' If behind a reverse proxy, ensure /summaries and /api are proxied to the backend.'
+                    : ' Make sure to serve this page from a web server.';
                 document.getElementById('summaryList').innerHTML = `
                     <p style="padding: 1.5rem; color: var(--accent-orange); font-size: 0.85rem;">
-                        Error loading summaries. Make sure to serve this page from a web server.
+                        Error loading summaries.${escapeHtml(hint)}
                     </p>
                 `;
             }
@@ -1575,7 +1589,7 @@
 
             appendRefreshLog('Connecting to live refresh stream...');
 
-            refreshEventSource = new EventSource('/api/refresh/stream');
+            refreshEventSource = new EventSource(API_BASE + '/refresh/stream');
 
             const onAnyEvent = (label, e) => {
                 try {
@@ -1650,7 +1664,7 @@
 
         async function checkRefreshStatus() {
             try {
-                const response = await fetch('/api/status');
+                const response = await fetch(API_BASE + '/status');
                 if (!response.ok) return;
                 
                 const status = await response.json();
@@ -1696,7 +1710,7 @@
             stopRefreshStream();
             
             try {
-                const response = await fetch('/api/refresh', {
+                const response = await fetch(API_BASE + '/refresh', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1717,7 +1731,7 @@
                     }
                     refreshStatusCheckInterval = setInterval(async () => {
                         await checkRefreshStatus();
-                        const statusResponse = await fetch('/api/status');
+                        const statusResponse = await fetch(API_BASE + '/status');
                         if (statusResponse.ok) {
                             const status = await statusResponse.json();
                             if (!status.in_progress) {
@@ -1815,7 +1829,7 @@
 
         async function loadAdhocStatus() {
             try {
-                const response = await fetch('/api/adhoc-status');
+                const response = await fetch(API_BASE + '/adhoc-status');
                 if (response.ok) {
                     const status = await response.json();
                     adhocRemainingToday = status.remaining_today;
@@ -1886,7 +1900,7 @@
             statusEl.className = 'adhoc-status';
             
             try {
-                const response = await fetch('/api/summarize-single', {
+                const response = await fetch(API_BASE + '/summarize-single', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1932,7 +1946,7 @@
 
         async function loadAdhocSummaries() {
             try {
-                const response = await fetch('/api/adhoc-summaries');
+                const response = await fetch(API_BASE + '/adhoc-summaries');
                 if (response.ok) {
                     adhocSummaries = await response.json();
                 } else {
@@ -1986,11 +2000,15 @@
                 currentAdhocSummary = data;
                 renderAdhocArticle(data);
             } catch (error) {
+                const isNetworkError = (error.message === 'Failed to fetch' || error.message === 'Load failed' || error.name === 'TypeError');
+                const message = isNetworkError
+                    ? 'Could not reach the server. If this app is behind a reverse proxy, ensure /summaries and /api are proxied to the backend.'
+                    : error.message;
                 mainContent.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">⚠️</div>
                         <h2>Failed to load summary</h2>
-                        <p>${error.message}</p>
+                        <p>${escapeHtml(message)}</p>
                     </div>
                 `;
             }
@@ -2099,7 +2117,7 @@
             }
             
             try {
-                const response = await fetch('/api/summarize-single', {
+                const response = await fetch(API_BASE + '/summarize-single', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
