@@ -1,0 +1,587 @@
+{
+  "item_id": "46840924",
+  "hn_url": "https://news.ycombinator.com/item?id=46840924",
+  "generated_at": "2026-02-01T22:02:48.711327",
+  "metadata": {
+    "llm_provider": "deepseek",
+    "include_comments": true
+  },
+  "article": {
+    "id": "46840924",
+    "rank": 1,
+    "title": "Generative AI and Wikipedia editing: What we learned in 2025",
+    "url": "https://wikiedu.org/blog/2026/01/29/generative-ai-and-wikipedia-editing-what-we-learned-in-2025/",
+    "points": 179,
+    "author": "ColinWright",
+    "time": "2026-01-31T21:14:02 1769894042",
+    "comment_count": 75,
+    "comment_url": "https://news.ycombinator.com/item?id=46840924",
+    "comments": [
+      {
+        "id": "46841838",
+        "author": "crabmusket",
+        "text": ">\nThat means the article contained a plausible-sounding sentence, cited to a real, relevant-sounding source. But when you read the source it’s cited to, the information on Wikipedia does not exist in that specific source. When a claim fails verification, it’s impossible to tell whether the information is true or not.\nThis has been a rampant problem on Wikipedia always. I can't seem to find any indicator that this has increased recently? Because they're only even investigating articles flagged as potentially AI. So what's the control baseline rate here?\nApplying correct citations is actually really hard work, even when you know the material thoroughly. I just assume people write stuff they know from their field, then mostly look to add the minimum number of plausible citations after the fact, and then most people never check them, and everyone seems to just accept it's better than nothing. But I also suppose it depends on how niche the page is, and which field it's in.",
+        "time": "2026-01-31T23:54:43 1769903683",
+        "indent_level": 0
+      },
+      {
+        "id": "46842144",
+        "author": "chr15m",
+        "text": "There was a fun example of this that happened live during a recent episode of the Changelog[1]. The hosts noted that they were incorrectly described as being \"from GitHub\" with a link to an episode of their podcast which didn't substantiate that claim. Their guest fixed the citation as they recorded[2].\n[1]:\nhttps://changelog.com/podcast/668#transcript-265\n[2]:\nhttps://en.wikipedia.org/w/index.php?title=Eugen_Rochko&diff...",
+        "time": "2026-02-01T02:28:23 1769912903",
+        "indent_level": 1
+      },
+      {
+        "id": "46843052",
+        "author": "michaelt",
+        "text": "How did they know it was not LLM generated?",
+        "time": "2026-02-01T13:26:10 1769952370",
+        "indent_level": 2
+      },
+      {
+        "id": "46846062",
+        "author": "gonzobonzo",
+        "text": "The false claim was added 7 Nov 2022 [1] while chatgpt wasn't released until 30 Nov 2022.\n[1]\nhttps://en.wikipedia.org/w/index.php?title=Eugen_Rochko&diff...",
+        "time": "2026-02-01T01:11:50 1769908310",
+        "indent_level": 3
+      },
+      {
+        "id": "46842659",
+        "author": "mikkupikku",
+        "text": "The problems I've run into is both people giving fake citations (the citations don't actually justify the claim that's being made in the article), and people giving real citations, but if you dig into the source you realize it's coming from a crank.\nIt's a big blind spot among the editors as well. When this problem was brought up here in the past, with people saying that claims on Wikipedia shouldn't be believed unless people verify the sources themselves, several Wikipedia editors came in and said this wasn't a problem and Wikipedia was trustworthy.\nIt's hard to see it getting fixed when so many don't see it as an issue. And framing it as a non-issue misleads users about the accuracy of the site.",
+        "time": "2026-02-01T12:51:37 1769950297",
+        "indent_level": 1
+      },
+      {
+        "id": "46845882",
+        "author": "6510",
+        "text": "A common source of error is in articles for movies where it gives plot summaries. The plot summaries are very often written by people who didn't watch the movie but are trying to re-resemble the plot like a jigsaw puzzle from little bits they glean from written reviews, or worse just writing down whatever they assume to be the plot. Very often it seems like the fuck ups came from people who either weren't watching the movie carefully, or were just listening to the dialogue while not watching the screen, or simply lacked media literacy.\nExample [SPOILERS]: the page for the movie Sorcerer claims that rough terrain caused a tire to pop. The movie never says that, the movie shows the tire popping (which results in the trucks cargo detonating). The next scene reveals the cause, but only to those paying attention; the bloody corpse of a bandito laying next to a submachine gun is shown in the rubble beside the road, and more banditos are there, very upset and quite nervous, to hijack the second truck. The obvious inference is that the first truck's tire was shot by the bandit to hijack/rob the truck. The tire didn't pop from rough terrain, the movie never says it did, it's just a conclusion you could get from not paying attention to the movie.",
+        "time": "2026-02-01T07:45:12 1769931912",
+        "indent_level": 2
+      },
+      {
+        "id": "46844327",
+        "author": "chr15m",
+        "text": "> but if you dig into the source you realize it's coming from a crank.\nIt is a dark sunday afternoon, Bob Park is sitting on his sofa as usual, drunk as usual, suddenly the TV reveals to him there to be something called the Paranormal (Twilight Zone music) ..instantly Bob knows there are no such things and adds a note to the incomprehensible mess of notes that one day will become his book. He downs one more Budweiser. In the distance lightning strikes a tree, Bob shouts\nYou don't scare me!\nand shakes his fist. After a few more beers a miracle of inspiration descends and as if channeling, in the time span of 10 minutes he writes notes about Cold Fusion, Alternative Medicine, Faith Healing, Telepathy, Homeopathy, Parapsychology, Zener cards, the tooth fairy and father xmas. With much confidence he writes that non of them are real. It's been a really productive afternoon. It reminds him of times long gone back when he actually published many serious papers. He counts the remaining beers in his cooler and says to himself, in the next book I will need to take on god himself. The world needs to know, god is not real. I too will be the authority on that subject.\nhttps://en.wikipedia.org/w/index.php?title=Special:WhatLinks...",
+        "time": "2026-02-01T02:19:08 1769912348",
+        "indent_level": 2
+      },
+      {
+        "id": "46843008",
+        "author": "mikkupikku",
+        "text": "LLMs can add unsubstantiated conclusions at a far higher rate than humans working without LLMs.",
+        "time": "2026-02-01T12:40:15 1769949615",
+        "indent_level": 1
+      },
+      {
+        "id": "46845815",
+        "author": "asadotzler",
+        "text": "True, but humans got a 20 year head start and I am willing to wager the overwhelming majority of extant flagrant errors are due to humans making shit up and no other human noticing and correcting it.\nMy go too example was the SDI page saying that brilliant pebble interceptors were to be made out of tungsten (completely illogical hogwash that doesn't even pass a basic sniff test.) This claim was added to the page in February of 2012 by a new wikipedia user, with no edit note accompanying the change nor any change to the sources and references. It stayed in the article until October 29th, 2025. And of course this misinformation was copied by other people and you can still find it being quoted, uncited, in other online publications. With an established track record of fact checking this poor, I honestly think LLMs are just pissing into the ocean.",
+        "time": "2026-02-01T13:53:28 1769954008",
+        "indent_level": 2
+      },
+      {
+        "id": "46846230",
+        "author": "EA-3167",
+        "text": "If LLMs 10X it, as the advocates keep insisting, that means it would only take 2 years to do as much or more damage as humans alone have done in 20.",
+        "time": "2026-02-01T02:26:05 1769912765",
+        "indent_level": 3
+      },
+      {
+        "id": "46843040",
+        "author": "DrewADesign",
+        "text": "At some point you're forced to either believe that people have never heard of the concept of a force multiplier, or to return to Upton Sinclair's observation about getting people to believe in things that hurt their bottom line.",
+        "time": "2026-02-01T02:39:21 1769913561",
+        "indent_level": 2
+      },
+      {
+        "id": "46843111",
+        "author": "nullsanity",
+        "text": "I don’t see why people keep blaming cars for road safety problems; people got into buggy crashes for centuries before automobiles even existed",
+        "time": "2026-02-01T02:57:31 1769914651",
+        "indent_level": 3
+      },
+      {
+        "id": "46843208",
+        "author": "DrewADesign",
+        "text": "Because a difference in scale can become a difference in category. A handful of buggy crashes can be reduced to operator error, but as the car becomes widely adopted and analysis matures, it becomes clear that the fundamental design of the machine and its available use cases has fundamental flaws that cause a higher rate of operator error than desired. Therefore, cars are redesigned to be safer, laws and regulations are put in place, license systems are issued, and traffic calming and road design is considered.\nHope that helps you understand.",
+        "time": "2026-02-01T03:57:55 1769918275",
+        "indent_level": 4
+      },
+      {
+        "id": "46843480",
+        "author": "obidee2",
+        "text": "Is the sarcasm really that opaque? Who would unironically equate buggy accidents and automobile accidents?",
+        "time": "2026-02-01T05:25:29 1769923529",
+        "indent_level": 5
+      },
+      {
+        "id": "46843874",
+        "author": "forgetfreeman",
+        "text": "I’d like to introduce you to the internet.\nThere’s a reason /s was a big thing, one persons obvious sarcasm is (almost tautologically) another persons true statement of opinion.",
+        "time": "2026-02-01T10:32:11 1769941931",
+        "indent_level": 6
+      },
+      {
+        "id": "46845112",
+        "author": "jacquesm",
+        "text": "How much time have you spent around developers?",
+        "time": "2026-02-01T11:41:58 1769946118",
+        "indent_level": 6
+      },
+      {
+        "id": "46845493",
+        "author": "jayflux",
+        "text": "Linkrot is a problem and edited articles are another. Because you can cite all you want, but if the underlying resource changes your foundation just melted away.",
+        "time": "2026-02-01T13:06:37 1769951197",
+        "indent_level": 1
+      },
+      {
+        "id": "46845961",
+        "author": "mmooss",
+        "text": "Pretty much every citation added to wikipedia is passed on to web archive now, either by the editor or automatically later on.\nFor news articles especially the recommendation now is to use the archive snapshot and not the url of the page.\nIt’s not a perfect solution, but it tries to solve the link rot issue.",
+        "time": "2026-02-01T00:01:07 1769904067",
+        "indent_level": 2
+      },
+      {
+        "id": "46842183",
+        "author": "crazygringo",
+        "text": "When I've checked Wikipedia citations I've found so much brazen deception - citations that obviously don't support the claim - that I don't have confidence in Wikipedia.\n> Applying correct citations is actually really hard work, even when you know the material thoroughly.\nWhy do you find it hard? Scholarly references can be sources for fundamental claims, review articles are a big help too.\nAlso, I tend to add things to Wikipedia or other wikis when I come across something valuable rather than writing something and then trying to find a source (which also is problematic for other reasons). A good thing about crowd-sourcing is that you don't have to write the article all yourself or all at once; it can be very iterative and therefore efficient.",
+        "time": "2026-02-01T01:26:48 1769909208",
+        "indent_level": 1
+      },
+      {
+        "id": "46842736",
+        "author": "ColinWright",
+        "text": "It's not that I\npersonally\nfind it hard.\nIt's more like, a lot of stuff in Wikipedia articles is somewhat \"general\" knowledge in a given field, where it's not always exactly obvious how to cite it, because it's not something any specific person gets credit for \"inventing\". Like, if there's a particular theorem then sure you cite who came up with it, or the main graduate-level textbook it's taught in. But often it's just a particular technique or fact that just kind of \"exists\" in tons of places but there's no obvious\nsingle\nplace to cite it from.\nSo it actually takes some work to find a\ngood\nreference. Like you say, review articles can be a good source, survey articles or books. But it can take a surprising amount of effort to track down a place that actually says the exact thing. I literally just last week was helping a professor (leader in their field!) try to find a citation during peer review for their paper for an \"obvious fact\" in the field, that was in their introduction section. It was actually really challenging, like trying to produce a citation for \"the sky is blue\".\nI remember, years ago, creating a Wikipedia article for a particular type of food in a particular country. You can buy it at literally every supermarket there. How the heck do you\ncite\nthe food and facts about it? It just...\nis\n. Like... websites for manufacturers of the food aren't really citations. But nobody's describing the food in academic survey articles either. You're not going to link to Allrecipes. What do you do? It's not always obvious.",
+        "time": "2026-01-31T21:15:48 1769894148",
+        "indent_level": 2
+      },
+      {
+        "id": "46840932",
+        "author": "dang",
+        "text": "The title I've chosen here is carefully selected to highlight one of the main points. It comes (lightly edited for length) from this paragraph:\nFar more insidious, however, was something else we discovered:\nMore than two-thirds of these articles failed verification.\nThat means the article contained a plausible-sounding sentence, cited to a real, relevant-sounding source. But when you read the source it’s cited to, the information on Wikipedia does not exist in that specific source. When a claim fails verification, it’s impossible to tell whether the information is true or not. For most of the articles Pangram flagged as written by GenAI, nearly every cited sentence in the article failed verification.",
+        "time": "2026-01-31T22:37:10 1769899030",
+        "indent_level": 0
+      },
+      {
+        "id": "46841616",
+        "author": "the_fall",
+        "text": "Submitted title was \"For most flagged articles, nearly every cited sentence failed verification\".\nI agree, that's interesting, and you've aptly expressed it in your comment here.",
+        "time": "2026-01-31T23:04:03 1769900643",
+        "indent_level": 1
+      },
+      {
+        "id": "46841809",
+        "author": "mjburgess",
+        "text": "FWIW, this is a fairly common problem on Wikipedia in political articles, predating AI. I encourage you to give it a try and verify some citations. A lot of them turn out to be more or less bogus.\nI'm not saying that AI isn't making it worse, but bad-faith editing is commonplace when it comes to hot-button topics.",
+        "time": "2026-01-31T23:51:19 1769903479",
+        "indent_level": 1
+      },
+      {
+        "id": "46842123",
+        "author": "the_fall",
+        "text": "Any articles where newspapers are the main source are basically just propaganda. An encyclopaedia should not be in the business of laundering yellow journalism into what is supposed to be a tertiary resource. If they banned this practice, that would immediately deal with this issue.",
+        "time": "2026-02-01T00:16:26 1769904986",
+        "indent_level": 2
+      },
+      {
+        "id": "46842299",
+        "author": "mmooss",
+        "text": "That's not what I'm saying. I mean citations that aren't citations: a \"source\" that doesn't discuss the topic at all or makes a different claim.",
+        "time": "2026-02-01T00:10:36 1769904636",
+        "indent_level": 3
+      },
+      {
+        "id": "46842247",
+        "author": "abacadaba",
+        "text": "A blanket dimsissal is a simple way to avoid dealing with complexity, here both in understanding the problem and forming solutions. Obviously not all newspapers are propaganda and at the same time not all can be trusted; not everything in the same newspaper or any other news source is of the same accuracy; nothing is completely trustworthy or completely untrustworthy.\nI think accepting that gets us to the starting line. Then we need to apply a lot of critical thought to sometimes difficult judgments.\nIMHO quality newspapers do an excellent job - generally better than any other category of source on current affairs, but far from perfect. I remember a recent article for which they intervied over 100 people, got ahold of secret documents, read thousands of pages, consulted experts .... That's not a blog post or Twitter take, or even a HN comment :), but we still need to examine it critically to find the value and the flaws.",
+        "time": "2026-02-01T01:28:37 1769909317",
+        "indent_level": 3
+      },
+      {
+        "id": "46842746",
+        "author": "tbossanova",
+        "text": "> Obviously not all newspapers are propaganda\ncitation needed",
+        "time": "2026-02-01T02:21:49 1769912509",
+        "indent_level": 4
+      },
+      {
+        "id": "46843019",
+        "author": "troyvit",
+        "text": "There is literally no source without bias. You just need to consider whether you think a sources biases are reasonable or not",
+        "time": "2026-02-01T05:22:49 1769923369",
+        "indent_level": 5
+      },
+      {
+        "id": "46843857",
+        "author": "snigsnog",
+        "text": "See you should work for a newspaper. You have the gumption.",
+        "time": "2026-02-01T00:53:03 1769907183",
+        "indent_level": 5
+      },
+      {
+        "id": "46842539",
+        "author": "chr15m",
+        "text": "That is probably 95% of wikipedia articles. Their goal is to create a record of what journalists consider to be true.",
+        "time": "2026-02-01T02:23:41 1769912621",
+        "indent_level": 3
+      },
+      {
+        "id": "46843028",
+        "author": "wry_durian",
+        "text": "People here are claiming that this is true of humans as well. Apart from the fact that bad content can be generated much faster with LLMs, what's your feeling about that criticism? It's there any measure of how many submissions before LLMs make unsubstantiated claims?\nThank you for publishing this work. Very useful reminder to verify sources ourselves!",
+        "time": "2026-01-31T23:28:03 1769902083",
+        "indent_level": 1
+      },
+      {
+        "id": "46842000",
+        "author": "ketzu",
+        "text": "Note that this article is\nonly\nabout edits made through the Wiki Edu program, which partners with universities and academics to have students edit Wikipedia on course-related topics. It's not about Wikipedia writ large!",
+        "time": "2026-02-01T08:40:22 1769935222",
+        "indent_level": 0
+      },
+      {
+        "id": "46844565",
+        "author": "tovej",
+        "text": "That's interesting as my first thought reading the comments was \"this problem seems very similar to many students writing papers just finding citations that sound correct\".\nSometimes it is really sad to read from (even PhD level) students on social media about their paper writing practices.",
+        "time": "2026-02-01T08:04:56 1769933096",
+        "indent_level": 1
+      },
+      {
+        "id": "46844425",
+        "author": "fernly",
+        "text": "I've found Wiki Edu -edited pages with pages of creative writing exercises. When I have read their sources they were clumsily paraphrasing and misunderstanding the source.\nLLMs definitely fit the use-case of Wiki Edu students, who are just looking to pass a grade, not to look into a topic because of their interest.",
+        "time": "2026-02-01T05:25:55 1769923555",
+        "indent_level": 1
+      },
+      {
+        "id": "46843879",
+        "author": "chrisjj",
+        "text": "Set aside the effect within Wikipedia and consider the larger picture, millions of people generating text with LLMs and at least some of that text being accepted as correct by millions of readers.\nThe WikiEdu article clearly demonstrates what everyone should have known already: an LLM has no commitment to the truth. An LLM's only commitment is to correct syntax.",
+        "time": "2026-01-31T21:48:56 1769896136",
+        "indent_level": 0
+      },
+      {
+        "id": "46841235",
+        "author": "EdwardDiego",
+        "text": "So, a small proportion of articles were detected as bot-written, and a large proportion of those failed validation.\nWhat if in fact a large proportion of articles were bot-written, but only the unverifiable ones were bad enough to be detected?",
+        "time": "2026-01-31T22:45:42 1769899542",
+        "indent_level": 0
+      },
+      {
+        "id": "46841669",
+        "author": "theendisney",
+        "text": "Human editors, I suspect, would pick up the \"tells\" of generated text, although as we know, there's a lot of false positives in that space.\nBut it looks like Pangram is a text classifying NN trained using a technique where they get a human to write a body of text on a subject, and then get various LLMs to write a body of text on the same subject, which strikes me as a good way to approach the problem. Not that I'm in anyway qualified to properly understand ML.\nMore details here:\nhttps://arxiv.org/pdf/2402.14873",
+        "time": "2026-02-01T04:52:54 1769921574",
+        "indent_level": 1
+      },
+      {
+        "id": "46843720",
+        "author": "candiddevmike",
+        "text": "What would be a truly epic application would be their own chat bot to ask about applying edit guidelines. After reading almost all of the guidelines the talkpage debates, even amoung experienced edditors, looked waaaay off. The pattern of revert first make up excuses later seems the worse newbie deterrent possible. This while it should be fine to make mistakes. Many such excuses would get debunked by a bot imediately. It simply wont do any favors. If established editors dont like it they can edit the guidelines.",
+        "time": "2026-01-31T22:50:01 1769899801",
+        "indent_level": 0
+      },
+      {
+        "id": "46841709",
+        "author": "ohyoutravel",
+        "text": "I feel like this is such a tragedy of the commons for the LLM providers. Wikipedia probably makes up a huge bulk of their dataset, why taint it? Would be interesting if there was some kind of \"you shall not use our platform on Wikipedia\" stance adopted.",
+        "time": "2026-01-31T22:53:16 1769899996",
+        "indent_level": 0
+      },
+      {
+        "id": "46841730",
+        "author": "kingstnap",
+        "text": "I don’t think it’s the providers doing this, it’s the awful users. They’re doing the same thing on GitHub. It’s maddening.",
+        "time": "2026-02-01T00:48:58 1769906938",
+        "indent_level": 1
+      },
+      {
+        "id": "46842522",
+        "author": "acdha",
+        "text": "Wikipedia having incorrect citations is way older than LLMs. As many other people have pointed out in this thread, if you start pulling strings a lot of what people write starts falling apart.\nIts not even unique to Wikipedia. Its really not difficult to find very misleading statements cited through a citation that doesn't even support the claim when you check the original.",
+        "time": "2026-02-01T01:01:39 1769907699",
+        "indent_level": 1
+      },
+      {
+        "id": "46842591",
+        "author": "MattGaiser",
+        "text": "This is like saying handing out machine guns is no big change because people have been shooting arrows for a long time. At some point volume becomes the story once it overwhelms the community’s ability to correct errors.",
+        "time": "2026-01-31T23:04:30 1769900670",
+        "indent_level": 2
+      },
+      {
+        "id": "46841814",
+        "author": "thorum",
+        "text": "It would be random individuals.",
+        "time": "2026-02-01T07:22:06 1769930526",
+        "indent_level": 1
+      },
+      {
+        "id": "46844238",
+        "author": "simianwords",
+        "text": "I’m honestly surprised LLMs are still screwing up citations. It does not feel like a harder task than building software or generating novel math proofs. In both those cases, of course, there is a verifier, but self-verification with “Does this text support this claim?” seems like it ought to be within the capabilities of a good reasoning model.\nBut as I understand the situation, even the major Deep Research systems still have this issue.",
+        "time": "2026-01-31T22:51:38 1769899898",
+        "indent_level": 0
+      },
+      {
+        "id": "46841718",
+        "author": "ktzar",
+        "text": "I find it very interesting that the main competitor to Wikipedia which is Grokipedia is taking a 180 degree approach being AI first.",
+        "time": "2026-01-31T23:07:36 1769900856",
+        "indent_level": 0
+      },
+      {
+        "id": "46841834",
+        "author": "nl",
+        "text": "Didn't know about Grokipedia, I've just opened an article in it about Spain, scrolled to a random paragraph, and the information in it is plain wrong:\nFrom\nhttps://grokipedia.com/page/Spain#terrain-and-landforms\n> Spain's peninsular terrain is dominated by the Meseta Central, a vast interior plateau covering about two-thirds of the country's land area, with elevations ranging from 610 to 760 meters and averaging around 660 meters\nSegovia is at 1.000 meters, and so is most of the top half of the \"Meseta\".\nhttps://en-gb.topographic-map.com/map-763q/Spain/?center=41....\nI still stand on not trusting any of what AI spits out, be it code or text. And it takes me usually longer to check that everything is ok than doing it myself, but my brain is enticed by the \"effort shortcut\" that AI promised.",
+        "time": "2026-02-01T02:42:56 1769913776",
+        "indent_level": 1
+      },
+      {
+        "id": "46843140",
+        "author": "anthk",
+        "text": "I'm not an expert on the geography of Spain, and it's rare that I'd defend Grokipedia but in this case I think it is correct.\nMeseta Central mean\ncentral tableland\n. Segovia is on the edge of the mountain range that surrounds that tableland, but often referred to as part of it. This is fuzzy though.\nWikipedia says:\nThe Meseta Central (lit. 'central tableland', sometimes referred to in English as Inner Plateau) is one of the basic geographical units of the Iberian Peninsula. It consists of a plateau covering a large part of the latter's interior.\n[1]\nLooking at the map you linked the flat part\nis\nbetween 610 to 760 meters.\nFinally, when speaking about the Iberian Peninsula Wikipedia itself includes this:\n> \"About three quarters of that rough octagon is the Meseta Central, a vast plateau ranging from 610 to 760 m in altitude.\"[2]\n[1]\nhttps://en.wikipedia.org/wiki/Meseta_Central\n[2]\nhttps://en.wikipedia.org/wiki/Iberian_Peninsula",
+        "time": "2026-02-01T09:11:32 1769937092",
+        "indent_level": 2
+      },
+      {
+        "id": "46844715",
+        "author": "charcircuit",
+        "text": "Spaniard here. Spain it's tricky, it's both 'flat' with the meseta and the 2nd most mountainous country in Europe. I am not kidding, look at a heigth map. It has a plateau... surrounded by mountains and with a bigass sierra at mid-North (Picos de Europa).",
+        "time": "2026-01-31T23:40:30 1769902830",
+        "indent_level": 3
+      },
+      {
+        "id": "46842076",
+        "author": "malfist",
+        "text": "Grok does cite that claim as being from\nhttps://countrystudies.us/spain/30.htm\na page in Eric Solsten and Sandra W. Meditz, editors. Spain: A Country Study. Washington: GPO for the Library of Congress, 1988.\nThe nice thing about grokipedia is that if you have counter examples like that you can provide it as evidence to change it and it will rewrite the article to be more clear.",
+        "time": "2026-02-01T02:59:58 1769914798",
+        "indent_level": 2
+      },
+      {
+        "id": "46843227",
+        "author": "charcircuit",
+        "text": "You know what other site you can provide evidence to and change to be more correct?",
+        "time": "2026-02-01T09:57:53 1769939873",
+        "indent_level": 3
+      },
+      {
+        "id": "46844955",
+        "author": "homebrewer",
+        "text": "Not Wikipedia as Wikipedia doesn't care about evidence. Those people care about reputable secondary sources and will ignore you when point out evidence that contradicts such sources.",
+        "time": "2026-02-01T03:55:17 1769918117",
+        "indent_level": 4
+      },
+      {
+        "id": "46843470",
+        "author": "6510",
+        "text": "I don't ever edit English wikipedia because my English is not nearly up to the standard, and suggestions for improvement (worthwhile IMO) are usually ignored. Grok at least won't ignore you. (I tend to post suggestions to unpopular pages with sparse edit history, which is probably the reason for them going unnoticed.)",
+        "time": "2026-02-01T09:34:00 1769938440",
+        "indent_level": 4
+      },
+      {
+        "id": "46844826",
+        "author": "bawolff",
+        "text": "I use to frequent irc channels and forums where no such thing as an old question existed. Someone asked an interesting question on irc and days or weeks later a response would happen. On forums the response could be more than a year \"delayed\". Gradually things shifted to newer new new news that couldn't possibly be new enough. Then debates happen where people sometimes link to the vastly superior olds. Wikipedia finally caught up and questions are no longer ignored. In stead they are archived long before an ignored status could be earned.",
+        "time": "2026-02-01T01:34:49 1769909689",
+        "indent_level": 5
+      },
+      {
+        "id": "46842784",
+        "author": "Sharlin",
+        "text": "> I find it very interesting that the main competitor to Wikipedia which is Grokipedia\nEncyclopedia Britannica (the website not the printed book) is the main competitor to Wikipedia and gets an order of magnitude more traffic than grokipedia. Right now grokipedia is the new kid on the block. It has yet to be seen if its just a novelty or if it has staying power but either way it still has a ways to go before its Wikipedia's primary competitor.",
+        "time": "2026-02-01T01:03:07 1769907787",
+        "indent_level": 1
+      },
+      {
+        "id": "46842601",
+        "author": "simianwords",
+        "text": "Main competitor? I’m pretty sure that Uncyclopedia is a more relevant competitor to Wikipedia than Grokipedia. Likely more accurate, too.",
+        "time": "2026-02-01T10:41:42 1769942502",
+        "indent_level": 1
+      },
+      {
+        "id": "46845156",
+        "author": "Sharlin",
+        "text": "In some time it will become a serious alternative.",
+        "time": "2026-02-01T11:07:39 1769944059",
+        "indent_level": 2
+      },
+      {
+        "id": "46845306",
+        "author": "simianwords",
+        "text": "Serious alternative if what you're after is false information, certainly.",
+        "time": "2026-02-01T12:36:06 1769949366",
+        "indent_level": 3
+      },
+      {
+        "id": "46845795",
+        "author": "LightBug1",
+        "text": "What false information?",
+        "time": "2026-02-01T12:52:00 1769950320",
+        "indent_level": 4
+      },
+      {
+        "id": "46845883",
+        "author": "oblio",
+        "text": "Wouldn't touch that grokipedia pos with your bargepole ... let alone mine.",
+        "time": "2026-02-01T08:43:09 1769935389",
+        "indent_level": 1
+      },
+      {
+        "id": "46844577",
+        "author": "simianwords",
+        "text": "That thing is \"the main competitor to Wikipedia\" in the same way I'm the main competitor for the Olympic 100m race. I mean, both I and the winner have legs so it's going to be a close race, right?",
+        "time": "2026-02-01T10:41:19 1769942479",
+        "indent_level": 1
+      },
+      {
+        "id": "46845154",
+        "author": "LightBug1",
+        "text": "It’s on its way to becoming more popular and a clear competitor to it. Just a matter of time.",
+        "time": "2026-02-01T12:55:41 1769950541",
+        "indent_level": 2
+      },
+      {
+        "id": "46845903",
+        "author": "arjie",
+        "text": "Is that \"more popular\" in the sense of McDonald's popular?",
+        "time": "2026-02-01T00:41:01 1769906461",
+        "indent_level": 3
+      },
+      {
+        "id": "46842467",
+        "author": "throwaway5465",
+        "text": ">\nThat means the article contained a plausible-sounding sentence, cited to a real, relevant-sounding source. But when you read the source it’s cited to, the information on Wikipedia does not exist in that specific source.\nThis happens a lot on Wikipedia. I'm not sure why, but it does and you can see its traces through the Internet as people post the mistaken information around.\nOne that took me a little work to fix was pointed out by someone on Twitter:\nhttps://x.com/Almost_Sure/status/1901112689138536903\nWhen I found the source, the twitter poster was correct! Someone had decided to translate \"A hundred years ago, people would have considered this an outrage. But now...\" as \"this function is an outrage\" which honestly is ironically an outrageous translation. What the hell dude.\nBut it takes a lot of work to clean up stuff like that!\nhttps://en.wikipedia.org/w/index.php?title=Weierstrass_funct...\nI had to go find the actual source (not the other 'sources' that repeated off Wikipedia or each other) and then make sure it was correct before dealing with it.\nA lie can travel halfway around the world...",
+        "time": "2026-02-01T01:05:39 1769907939",
+        "indent_level": 0
+      },
+      {
+        "id": "46842616",
+        "author": "malfist",
+        "text": "There seems much defensiveness in the comments here along the lines of \"not a new thing\" and \"not unique to LLM/AI\".\nIt seems to deflect, even gaslight TFA.\n> For most of the articles Pangram flagged as written by GenAI, nearly every cited sentence in the article failed verification.\nSo why deflect that into convenient other pedantry (surely not under the guise tech forums often do so)?\nWSo why the discomfort for part of HN at an assertion AI is being used for nefarious purposes and creation of alternate 'truths'?",
+        "time": "2026-02-01T02:54:56 1769914496",
+        "indent_level": 0
+      },
+      {
+        "id": "46843193",
+        "author": "emp17344",
+        "text": "There sure are a lot of green names on this post pushing that agenda. Makes you wonder if its astroturfing. And why its nessecary, is AI so fragile it can't let any criticism stand unchallenged?",
+        "time": "2026-02-01T01:31:23 1769909483",
+        "indent_level": 1
+      },
+      {
+        "id": "46842757",
+        "author": "malfist",
+        "text": "Astroturfing or marketing, I’d guess. I’ve noticed you’re no longer allowed to say negative things about AI here without significant pushback, and I’d bet this isn’t an organic shift in perception.",
+        "time": "2026-02-01T02:58:18 1769914698",
+        "indent_level": 1
+      },
+      {
+        "id": "46843216",
+        "author": "oblio",
+        "text": "I've found that generally people reserve down votes for posts that don't add to the conversation, in general, just like we're supposed to do. Its always been down vote city if you happen to criticize political positions that benefit libertarian technologists. But lately anything critical of AI tends to get a lot of down votes. Even on older posts that you can't find on the front page anymore... It feels inorganic",
+        "time": "2026-02-01T08:45:24 1769935524",
+        "indent_level": 2
+      },
+      {
+        "id": "46844587",
+        "author": "Lapsa",
+        "text": "> Its always been down vote city if you happen to criticize political positions that benefit libertarian technologists.\nThis varies wildly by timezone. Usually I get upvoted during European timezones and then brace for the Americans to wake up.",
+        "time": "2026-02-01T12:25:41 1769948741",
+        "indent_level": 3
+      },
+      {
+        "id": "46845734",
+        "author": "PlatoIsADisease",
+        "text": "wikipedia is great but I can't get over this -\nhttps://www.wikifunctions.org/view/en/Z16393",
+        "time": "2026-02-01T12:18:56 1769948336",
+        "indent_level": 0
+      },
+      {
+        "id": "46845692",
+        "author": "ks2048",
+        "text": "ITT: People saying what I got downvoted for on the last wikipedia HN thread\nI don't care if AI is used. I care about citations.\nI don't know what happened between that thread and this, maybe the narrative really changes how people respond.",
+        "time": "2026-02-01T00:52:09 1769907129",
+        "indent_level": 0
+      },
+      {
+        "id": "46842536",
+        "author": "ragesoss",
+        "text": "lol. would have written something shorter for HN, but the main expected audience for it was Wikipedians.",
+        "time": "2026-02-01T02:48:56 1769914136",
+        "indent_level": 0
+      },
+      {
+        "id": "46843164",
+        "author": "ragesoss",
+        "text": "lol. would have written something shorter for HN, but the main expected audience for it was Wikipedians.",
+        "time": "2026-02-01T01:00:54 1769907654",
+        "indent_level": 1
+      },
+      {
+        "id": "46842589",
+        "author": "HPsquared",
+        "text": "This goes much further than Wikipedia, it's just particularly visible there.",
+        "time": "2026-02-01T01:04:28 1769907868",
+        "indent_level": 0
+      },
+      {
+        "id": "46842609",
+        "author": "gwern",
+        "text": "This goes much further than Wikipedia, it's just particularly visible there.",
+        "time": "2026-02-01T02:07:38 1769911658",
+        "indent_level": 1
+      },
+      {
+        "id": "46842954",
+        "author": "chr15m",
+        "text": "Thanks for the LLM comment, but that's dumb. If the problem really was as bad with humans (it obviously is not), then OP wouldn't've happened:\n> For most of the articles Pangram flagged as written by GenAI,\nnearly every cited sentence in the article failed verification.",
+        "time": "2026-02-01T02:39:26 1769913566",
+        "indent_level": 1
+      },
+      {
+        "id": "46843113",
+        "author": "vibeprofessor",
+        "text": "Agree. I'm curious about the human contribution baseline.",
+        "time": "2026-02-01T04:45:24 1769921124",
+        "indent_level": 2
+      },
+      {
+        "id": "46843686",
+        "author": "vibeprofessor",
+        "text": "I trust Grokipedia way more, even though it's AI-generated. Wikipedia on any current topic is dominated by various edit gangs trying to push an agenda",
+        "time": "2026-02-01T04:45:24 1769921124",
+        "indent_level": 0
+      }
+    ],
+    "content": "January 29, 2026\n/\nLiAnna Davis\nLike many organizations, Wiki Education has grappled with generative AI, its impacts, opportunities, and threats, for several years. As an organization that runs large-scale programs to bring new editors to Wikipedia (we’re responsible for about\n19% of all new active editors on English Wikipedia\n), we have deep understanding of what challenges face new content contributors to Wikipedia — and how to support them to successfully edit. As many people have begun using generative AI chatbots like ChatGPT, Gemini, or Claude in their daily lives, it’s unsurprising that people will also consider using them to help draft contributions to Wikipedia. Since Wiki Education’s programs provide a cohort of content contributors whose work we can evaluate, we’ve looked into how our participants are using GenAI tools.\nWe are choosing to share our perspective through this blog post because we hope it will help inform discussions of GenAI-created content on Wikipedia. In an open environment like the Wikimedia movement, it’s important to share what you’ve learned. In this case, we believe our learnings can help Wikipedia editors who are trying to protect the integrity of content on the encyclopedia, Wikipedians who may be interested in using generative AI tools themselves, other program leaders globally who are trying to onboard new contributors who may be interested in using these tools, and the Wikimedia Foundation, whose product and technology team builds software to help support the development of high-quality content on Wikipedia.\nOur fundamental conclusion about generative AI is: Wikipedia editors should never copy and paste the output from generative AI chatbots like ChatGPT into Wikipedia articles.\nLet me explain more.\nAI detection and investigation\nSince the launch of ChatGPT in November 2022, we’ve been paying close attention to GenAI-created content, and how it relates to Wikipedia. We’ve spot-checked work of new editors from our programs, primarily focusing on citations to ensure they were real and not hallucinated. We experimented with tools ourselves, we led video sessions about GenAI for our program participants, and we closely tracked\non-wiki policy discussions around GenAI\n. Currently, English Wikipedia prohibits the use of generative AI to create images or in talk page discussions, and recently adopted a\nguideline against using large language models to generate new articles\n.\nAs our Wiki Experts Brianda Felix and Ian Ramjohn worked with program participants throughout the first half of 2025, they found more and more text bearing the hallmarks of generative AI in article content, like bolded words or bulleted lists in odd places. But the use of generative AI wasn’t necessarily problematic, as long as the content was accurate. Wikipedia’s open editing process encourages stylistic revisions to factual text to better fit Wikipedia’s style.\nBut\nwas\nthe text factually accurate? This fundamental question led our Chief Technology Officer, Sage Ross, to investigate different generative AI detectors. He landed on a tool called\nPangram\n, which we have found to be highly accurate for Wikipedia text. Sage generated a list of all the new articles created through our work since 2022, and ran them all through Pangram. A total of 178 out of the 3,078 articles came back as flagged for AI — none before the launch of ChatGPT in late 2022, with increasing percentages term over term since then. About half of our staff spent a month during summer 2025 painstakingly reviewing the text from these 178 articles.\nPangram’s detection results showed no signs of AI usage before the launch of ChatGPT, and then a steady rise in usage in the terms following. Courtesy of Manoel Horta Ribeiro and Francesco Salvi.\nBased on the discourse around AI hallucinations, we were expecting these articles to contain citations to sources that didn’t exist, but this wasn’t true: only 7% of the articles had fake sources. The rest had information cited to real, relevant sources.\nFar more insidious, however, was something else we discovered:\nMore than two-thirds of these articles failed verification.\nThat means the article contained a plausible-sounding sentence, cited to a real, relevant-sounding source. But when you read the source it’s cited to, the information on Wikipedia does not exist in that specific source. When a claim fails verification, it’s impossible to tell whether the information is true or not. For most of the articles Pangram flagged as written by GenAI, nearly every cited sentence in the article failed verification.\nThis finding led us to invest significant staff time into cleaning up these articles — far more than these editors had likely spent creating them. Wiki Education’s core mission is to improve Wikipedia, and when we discover our program has unknowingly contributed to misinformation on Wikipedia, we are committed to cleaning it up. In the clean-up process, Wiki Education staff moved more recent work back",
+    "ai_classification": {
+      "is_ai_related": true,
+      "confidence": 0.95,
+      "reasoning": "The article title and content explicitly discuss 'generative AI' and its impacts on Wikipedia editing, directly referencing AI technology."
+    },
+    "article_summary": "Wiki Education's 2025 findings on generative AI and Wikipedia editing conclude that editors should never copy-paste AI chatbot output directly into articles. While AI use isn't inherently problematic if content is accurate, the organization observed AI-generated text with odd formatting in contributions. They emphasize verifying citations to avoid AI \"hallucinations\" and note English Wikipedia's existing prohibitions on AI for images, talk pages, and generating new articles. Their insights aim to help editors protect content integrity and guide new contributors.",
+    "comment_summary": "The discussion centers on widespread citation issues on Wikipedia, where sources often don't support the claims they're attached to, making verification impossible. Commenters note this problem long predates AI, arising from both human error and bad-faith editing. While AI-generated content can produce unsubstantiated claims faster, the core issue is a systemic lack of source verification by editors. The conversation references a specific study finding most AI-flagged articles failed verification, but cautions this study focused only on edits from an educational program. Overall, the consensus is that readers must verify sources themselves, as incorrect citations mislead about Wikipedia's accuracy.",
+    "comment_sentiment": "negative",
+    "comment_sentiment_score": 0.3,
+    "comment_sentiment_details": "Comments express strong concern, frustration, and skepticism about citation accuracy on Wikipedia, exacerbated by AI-generated content. Tone is critical and distrustful, with minimal positive sentiment.",
+    "comment_topics": [
+      "Wikipedia citation reliability",
+      "AI-generated content impact",
+      "information verification"
+    ],
+    "comment_agreement": {
+      "consensus": "agree",
+      "agreement_score": 0.8,
+      "details": "All commenters implicitly or explicitly agree with the article's main point that AI-generated content and citation practices on Wikipedia are problematic. They expand on the issue with personal experiences and broader concerns about citation reliability, but none defend or dispute the article's core warnings.",
+      "key_points": [
+        "AI/human-generated citations often do not support the claims made",
+        "Verifying sources is essential but frequently neglected",
+        "The problem of unreliable citations predates AI but may be exacerbated by it"
+      ]
+    }
+  }
+}
