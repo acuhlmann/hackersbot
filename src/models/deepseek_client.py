@@ -58,7 +58,8 @@ class DeepseekClient:
                 )
             self._client = OpenAI(
                 api_key=self.api_key,
-                base_url=self.base_url
+                base_url=self.base_url,
+                timeout=120.0,  # 120s timeout to prevent hanging forever
             )
         return self._client
     

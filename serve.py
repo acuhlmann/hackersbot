@@ -54,6 +54,8 @@ BIND_ADDRESS = os.environ.get('BIND_ADDRESS', '0.0.0.0')
 # Global state for refresh management
 refresh_lock = threading.Lock()
 refresh_in_progress = False
+refresh_started_at: Optional[float] = None  # time.monotonic() when refresh began
+REFRESH_TIMEOUT_SECONDS = 300  # 5 minutes max for any refresh
 
 # Broadcast stream state (SSE subscribers)
 subscribers_lock = threading.Lock()
@@ -85,6 +87,23 @@ def _broadcast_refresh_event(payload: Dict[str, Any]) -> None:
             except queue.Full:
                 # If still full, drop this event.
                 pass
+
+
+def _check_stale_refresh() -> None:
+    """Auto-reset refresh_in_progress if it has been stuck for too long."""
+    global refresh_in_progress, refresh_started_at
+    with refresh_lock:
+        if refresh_in_progress and refresh_started_at is not None:
+            elapsed = time.monotonic() - refresh_started_at
+            if elapsed > REFRESH_TIMEOUT_SECONDS:
+                print(f"[REFRESH] Auto-resetting stale refresh flag (stuck for {elapsed:.0f}s)", flush=True)
+                refresh_in_progress = False
+                refresh_started_at = None
+                _broadcast_refresh_event({
+                    "type": "refresh_error",
+                    "level": "error",
+                    "message": f"Refresh timed out after {elapsed:.0f}s and was auto-reset"
+                })
 
 
 def generate_adhoc_index(base_dir: Path) -> List[Dict[str, Any]]:
@@ -134,13 +153,14 @@ scheduler_lock = threading.Lock()
 
 def run_scheduled_refresh():
     """Run the daily refresh (called by scheduler)."""
-    global refresh_in_progress
-    
+    global refresh_in_progress, refresh_started_at
+
     with refresh_lock:
         if refresh_in_progress:
             print("[SCHEDULER] Refresh already in progress, skipping scheduled run", flush=True)
             return
         refresh_in_progress = True
+        refresh_started_at = time.monotonic()
     
     try:
         print("[SCHEDULER] Starting scheduled daily refresh...", flush=True)
@@ -219,6 +239,7 @@ def run_scheduled_refresh():
     finally:
         with refresh_lock:
             refresh_in_progress = False
+            refresh_started_at = None
 
 
 def daily_scheduler_thread():
@@ -498,7 +519,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     
     def handle_status(self):
         """Handle GET /api/status - return refresh status and last refresh time."""
-        # Note: We read refresh_in_progress but don't modify it, so no global needed
+        _check_stale_refresh()  # Auto-reset if stuck too long
         today_summary = self.get_today_summary()
         status_data = {
             "in_progress": refresh_in_progress,
@@ -519,8 +540,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     
     def handle_refresh(self):
         """Handle POST /api/refresh - trigger summary generation."""
-        global refresh_in_progress
-        
+        global refresh_in_progress, refresh_started_at
+
+        _check_stale_refresh()  # Auto-reset if stuck too long
+
         # Check if refresh is already in progress
         with refresh_lock:
             if refresh_in_progress:
@@ -529,7 +552,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "error": "Refresh already in progress"
                 }, status_code=409)
                 return
-            
+
             # Check rate limit
             can_refresh, error_msg = self.check_rate_limit()
             if not can_refresh:
@@ -538,8 +561,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "error": error_msg
                 }, status_code=429)
                 return
-            
+
             refresh_in_progress = True
+            refresh_started_at = time.monotonic()
         
         try:
             # Run the summarizer in a background thread to avoid blocking
@@ -627,8 +651,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     # Don't raise - let finally block reset the flag
                 finally:
                     with refresh_lock:
-                        global refresh_in_progress
+                        global refresh_in_progress, refresh_started_at
                         refresh_in_progress = False
+                        refresh_started_at = None
                         _broadcast_refresh_event({"type": "log", "level": "info", "message": "Refresh flag cleared"})
             
             # Start refresh in background thread
@@ -644,6 +669,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             with refresh_lock:
                 refresh_in_progress = False
+                refresh_started_at = None
             self.send_json_response({
                 "success": False,
                 "error": str(e)
