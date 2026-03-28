@@ -17,6 +17,11 @@ services:
       # Mount web assets for live development
       - ./web:/app/web:ro
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')"]
       interval: 30s

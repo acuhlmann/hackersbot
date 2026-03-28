@@ -112,19 +112,29 @@ run_gcloud_ssh "
     sudo docker system df 2>/dev/null || echo 'Unable to check Docker disk usage'
 " "Checking VM disk space" || true
 
-# If disk is extremely low, attempt cleanup (but do not fail early; docker load will be the source of truth)
+# ALWAYS clean up old Docker resources before loading new image to prevent disk exhaustion.
+# On an e2-micro with 30GB disk, each deploy layers ~200-400MB of images.
+# Without cleanup, the disk fills up in ~10-15 deploys, causing the VM to crash.
+echo "Cleaning up old Docker resources before loading new image..."
+run_gcloud_ssh "
+    # Stop and remove the running container (will be recreated below)
+    sudo docker stop $CONTAINER_NAME 2>/dev/null || true
+    sudo docker rm $CONTAINER_NAME 2>/dev/null || true
+    # Remove ALL unused images (not just dangling) — this is the key to preventing disk exhaustion
+    sudo docker system prune -af --volumes || true
+    # Clean system caches too
+    sudo apt-get clean 2>/dev/null || true
+    sudo journalctl --vacuum-size=50M 2>/dev/null || true
+    echo ''
+    echo 'Disk space after cleanup:'
+    df -h /
+" "Cleaning up old Docker resources" || true
+
+# Verify disk space is sufficient (warn if still low after cleanup)
 VM_AVAIL_ROOT_MB=$(run_gcloud_ssh "df -m / | tail -1 | awk '{print \$4}'" "Checking root free space" "true" | tail -n 1 | tr -d '\r' || true)
-if [[ -n "$VM_AVAIL_ROOT_MB" ]] && [[ "$VM_AVAIL_ROOT_MB" =~ ^[0-9]+$ ]] && [ "$VM_AVAIL_ROOT_MB" -lt 300 ]; then
-    echo "Low free space detected on VM (${VM_AVAIL_ROOT_MB}MB). Attempting cleanup..."
-    run_gcloud_ssh "
-        sudo docker stop $CONTAINER_NAME 2>/dev/null || true
-        sudo docker rm $CONTAINER_NAME 2>/dev/null || true
-        sudo docker system prune -af || true
-        sudo docker volume prune -f || true
-        echo ''
-        echo 'Disk space after cleanup:'
-        df -h / | tail -1
-    " "Cleaning up old Docker resources" || true
+if [[ -n "$VM_AVAIL_ROOT_MB" ]] && [[ "$VM_AVAIL_ROOT_MB" =~ ^[0-9]+$ ]] && [ "$VM_AVAIL_ROOT_MB" -lt 500 ]; then
+    echo "WARNING: Very low free space on VM after cleanup (${VM_AVAIL_ROOT_MB}MB). Deploy may fail."
+    echo "Consider resizing the disk: gcloud compute disks resize main --zone=$ZONE --size=40GB"
 fi
 
 # Stream Docker image to VM and load it (no tar file on VM)
@@ -169,9 +179,13 @@ echo "$LOAD_OUTPUT"
 echo "Image loaded successfully on VM."
 
 # Build docker run command with environment variables
+# Log rotation prevents Docker JSON logs from filling the disk over time
 DOCKER_RUN_CMD="docker run -d \
     --name $CONTAINER_NAME \
     --restart unless-stopped \
+    --log-driver json-file \
+    --log-opt max-size=10m \
+    --log-opt max-file=3 \
     -p 127.0.0.1:18080:8000 \
     -e PORT=8000 \
     -e BIND_ADDRESS=0.0.0.0 \
