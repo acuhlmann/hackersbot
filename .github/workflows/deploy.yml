@@ -51,8 +51,8 @@ jobs:
           ./deploy-docker.sh
         timeout-minutes: 15
         env:
-          ZONE: asia-east2-a
-          INSTANCE: main
+          ZONE: us-central1-a
+          INSTANCE: hn-vm
           PROJECT: photogroup-215600
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       - name: Deployment troubleshooting (on failure)
@@ -62,14 +62,14 @@ jobs:
           echo "• IAP 4033 'not authorized': Grant the GCP_SA_KEY service account role: roles/iap.tunnelResourceAccessor"
           echo "  See README → Deploy (GCP) → troubleshooting"
           echo "• Disk full on VM: SSH to VM and run: sudo docker image prune -af"
-          echo "• Run SSH diagnose: gcloud compute ssh main --project=photogroup-215600 --zone=asia-east2-a --troubleshoot --tunnel-through-iap 2>&1 || true"
+          echo "• Run SSH diagnose: gcloud compute ssh hn-vm --project=photogroup-215600 --zone=us-central1-a --troubleshoot 2>&1 || true"
           echo "::endgroup::"
       
       - name: Deployment summary
         run: |
           echo "✅ Deployment completed successfully!"
-          echo "Instance: main"
-          echo "Zone: asia-east2-a"
+          echo "Instance: hn-vm"
+          echo "Zone: us-central1-a"
           echo "Project: photogroup-215600"
           echo "Deployment method: Docker"
           echo "URL: https://hackernews.photogroup.network"

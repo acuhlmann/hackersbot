@@ -89,8 +89,10 @@ Run: `pytest -v`
 
 ## Deployment
 
-- **Target:** GCP Compute Engine VM
+- **Target:** GCP Compute Engine `hn-vm` in `us-central1-a` (Always Free e2-micro), project `photogroup-215600`
+- **Public URL:** `https://hackernews.photogroup.network` → nginx (:443) → Docker `127.0.0.1:18080`
 - **Script:** `deploy-docker.sh` (builds Docker image on VM, runs via docker-compose)
+- **TLS:** `setup-ssl.sh` / certbot on the VM (Cloudflare A record must stay DNS-only / grey cloud)
 - **VM scripts:** `scripts/vm-startup.sh` (boot cleanup), `scripts/vm-disk-cleanup.sh`
 - **CI trigger:** Push to `main` → tests pass → auto-deploy
 - **Secrets needed:** `GCP_SA_KEY`, `DEEPSEEK_API_KEY` in GitHub repo secrets

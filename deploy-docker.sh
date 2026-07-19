@@ -3,8 +3,8 @@
 # Deploy HackersBot app to GCP VM using Docker
 # This script builds the Docker image locally, pushes it to the VM, and runs it
 
-ZONE=${ZONE:-asia-east2-a}
-INSTANCE=${INSTANCE:-main}
+ZONE=${ZONE:-us-central1-a}
+INSTANCE=${INSTANCE:-hn-vm}
 PROJECT=${PROJECT:-photogroup-215600}
 IMAGE_NAME=hackersbot
 CONTAINER_NAME=hackersbot-app

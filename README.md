@@ -301,7 +301,16 @@ The `deploy.yml` workflow:
 - **Direct SSH:** `roles/compute.osLogin` or `roles/compute.instanceAdmin.v1`
 - **IAP tunnel:** additionally `roles/iap.tunnelResourceAccessor` (set `USE_IAP_TUNNEL=1`)
 
-**Defaults:** Project `photogroup-215600`, zone `asia-east2-a`, instance `main`. Override with `PROJECT`, `ZONE`, `INSTANCE` env vars in the workflow.
+**Defaults:** Project `photogroup-215600`, zone `us-central1-a`, instance `hn-vm` (Always Free e2-micro). Override with `PROJECT`, `ZONE`, `INSTANCE` env vars.
+
+**HTTPS:** Nginx on the VM terminates TLS for `hackernews.photogroup.network` (Let's Encrypt via certbot). Keep the Cloudflare DNS record for `hackernews` **DNS only** (grey cloud) so HTTP-01 renewals can reach the VM. Re-issue or renew with:
+
+```bash
+./setup-ssl.sh
+# or:
+gcloud compute ssh hn-vm --project=photogroup-215600 --zone=us-central1-a \
+  --command "sudo certbot --nginx -d hackernews.photogroup.network --non-interactive --agree-tos --redirect"
+```
 
 ### VM Startup Script
 
